@@ -1,0 +1,21 @@
+# WITHROBOT iAHRS IMU  ->  stable symlink /dev/IMU
+#
+# Detected on this machine (udevadm info -a -n /dev/ttyUSB0):
+#   ATTRS{idVendor}  == "10c4"   (Silicon Labs)
+#   ATTRS{idProduct} == "ea60"   (CP210x UART Bridge)
+#   ATTRS{serial}    == "0001"   (CP2102 -- factory DEFAULT, shared across many CP210x units)
+#   KERNELS          == "3-7.4"  (physical USB port path: bus usb3, hub port 7.4)
+#
+# The CP2102 serial "0001" is NOT per-unit unique, and the iAHRS sensor's own
+# internal hardware serial is invisible to udev (readable only over the sensor
+# protocol at 115200 baud). The physical USB port path (KERNELS) is therefore
+# used as the unique disambiguator -- this survives reboots and coexisting
+# CP210x devices, but binds /dev/IMU to THIS USB socket. If the IMU is moved to
+# another port, update KERNELS (re-run install_udev.sh) or reflash a unique
+# CP2102 serial and match on ATTRS{serial} instead.
+#
+# Apply after editing:
+#   sudo udevadm control --reload-rules && sudo udevadm trigger
+# Verify:
+#   ls -la /dev/IMU
+SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", ATTRS{serial}=="0001", KERNELS=="3-7.4", SYMLINK+="IMU", MODE="0666", GROUP="dialout"
