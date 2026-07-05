@@ -1,3 +1,23 @@
+## 2026-07-05 10:54 (KST) — 세션 종료 기록 커밋·푸쉬 요청
+
+> "세션 종료 기록 커밋 푸쉬"
+
+---
+
+## 2026-07-05 10:54 (KST) — iahrs docs 한줄 실행 명령어 작성 요청
+
+> "/home/amap/Project/kkw/Welding_Robot_Ros2_ws/src/Sensor/IMU/iahrs_driver_ros2/docs 에 한줄 실행 명령어 작성
+>
+> 복잡하게 하지말고 /home/amap/Project/kkw/Welding_Robot_Ros2_ws/src/Sensor/LIdar/3D/livox_mid360/doc 참조"
+
+---
+
+## 2026-07-05 10:52 (KST) — 진행 확인 요청
+
+> "진행 확인"
+
+---
+
 ## 2026-07-05 10:48 (KST) — code review 미진행 사유 문의
 
 > "code review는 왜 진행 안할까?"
