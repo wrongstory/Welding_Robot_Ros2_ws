@@ -1,0 +1,831 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TeleopPanel</class>
+ <widget class="QWidget" name="TeleopPanel">
+  <property name="geometry">
+   <rect><x>0</x><y>0</y><width>760</width><height>660</height></rect>
+  </property>
+  <property name="windowTitle"><string>FITO Teleop Panel</string></property>
+  <property name="styleSheet">
+   <string notr="true">QWidget#TeleopPanel { background:#1e1e1e; color:#e0e0e0; }
+QLabel { color:#e0e0e0; }
+QPushButton { padding:6px 12px; }
+QListWidget, QPlainTextEdit { background:#252525; border:1px solid #444; color:#d0d0d0; }
+QTabWidget::pane { border:1px solid #444; }
+QTabBar::tab { background:#2a2a2a; color:#bbb; padding:6px 16px; }
+QTabBar::tab:selected { background:#3a3a3a; color:white; }</string>
+  </property>
+
+  <layout class="QVBoxLayout" name="root_layout">
+   <property name="leftMargin"><number>8</number></property>
+   <property name="rightMargin"><number>8</number></property>
+   <property name="topMargin"><number>8</number></property>
+   <property name="bottomMargin"><number>8</number></property>
+
+   <item>
+    <widget class="QTabWidget" name="tab_widget">
+     <property name="currentIndex"><number>0</number></property>
+
+     <!-- ================ TAB 1: Joystick Control ================ -->
+     <widget class="QWidget" name="tab_joystick">
+      <attribute name="title"><string>Joystick Control</string></attribute>
+      <layout class="QVBoxLayout" name="joy_layout">
+       <property name="spacing"><number>10</number></property>
+
+       <!-- E-STOP banner -->
+       <item>
+        <widget class="QLabel" name="lbl_estop_banner">
+         <property name="minimumSize"><size><width>0</width><height>80</height></size></property>
+         <property name="alignment"><set>Qt::AlignCenter</set></property>
+         <property name="text"><string>READY</string></property>
+         <property name="styleSheet">
+          <string notr="true">QLabel { background:#1f3a1f; color:#7fff7f; border:3px solid #3fa83f; border-radius:8px; font-size:32pt; font-weight:bold; }</string>
+         </property>
+        </widget>
+       </item>
+
+       <!-- Status row -->
+       <item>
+        <layout class="QHBoxLayout" name="status_row">
+         <property name="spacing"><number>16</number></property>
+         <item>
+          <widget class="QLabel" name="lbl_deadman">
+           <property name="minimumSize"><size><width>140</width><height>40</height></size></property>
+           <property name="alignment"><set>Qt::AlignCenter</set></property>
+           <property name="text"><string>DEAD-MAN</string></property>
+           <property name="styleSheet">
+            <string notr="true">QLabel { background:#333; color:#888; border:1px solid #555; border-radius:4px; font-weight:bold; }</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="lbl_conn_status">
+           <property name="alignment"><set>Qt::AlignCenter</set></property>
+           <property name="text"><string>●  No joystick selected</string></property>
+           <property name="styleSheet">
+            <string notr="true">QLabel { background:#252525; padding:8px; border:1px solid #444; border-radius:4px; }</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="lbl_joy_hz">
+           <property name="minimumSize"><size><width>120</width><height>0</height></size></property>
+           <property name="alignment"><set>Qt::AlignCenter</set></property>
+           <property name="text"><string>/joy: -- Hz</string></property>
+           <property name="styleSheet">
+            <string notr="true">QLabel { background:#252525; padding:8px; border:1px solid #444; border-radius:4px; font-family:monospace; }</string>
+           </property>
+          </widget>
+         </item>
+         <!-- ESP32 bridge connection badge (driven by /joint_states freshness) -->
+         <item>
+          <widget class="QLabel" name="lbl_bridge_status">
+           <property name="minimumSize"><size><width>200</width><height>0</height></size></property>
+           <property name="alignment"><set>Qt::AlignCenter</set></property>
+           <property name="text"><string>●  bridge: --</string></property>
+           <property name="styleSheet">
+            <string notr="true">QLabel { background:#252525; color:#888; padding:6px; border:1px solid #444; border-radius:4px; font-weight:bold; }</string>
+           </property>
+          </widget>
+         </item>
+         <!-- Motor enable toggle (publishes /motor_enable Bool, /clear_error on enable) -->
+         <item>
+          <widget class="QPushButton" name="btn_motor_enable">
+           <property name="minimumSize"><size><width>180</width><height>0</height></size></property>
+           <property name="checkable"><bool>true</bool></property>
+           <property name="text"><string>MOTORS DISABLED</string></property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton { background:#3a1e1e; color:#ff7f7f; padding:8px; border:1px solid #c04040; border-radius:4px; font-weight:bold; } QPushButton:checked { background:#1e3a1e; color:#7fff7f; border:1px solid #3fa83f; }</string>
+           </property>
+          </widget>
+         </item>
+         <!-- FREEWHEEL: motor OFF + brake RELEASED. Required for hand rotation. -->
+         <item>
+          <widget class="QPushButton" name="btn_freewheel">
+           <property name="minimumSize"><size><width>140</width><height>0</height></size></property>
+           <property name="text"><string>FREEWHEEL</string></property>
+           <property name="toolTip"><string>Send /freewheel (Empty) → bridge sends #F → firmware: motor OFF + brake released. For manual rotation (kinematic calibration, hand-pushing). Motor will not respond to RPM commands until MOTORS ENABLED clicked again.</string></property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton { background:#206060; color:white; padding:8px; border:1px solid #40a0a0; border-radius:4px; font-weight:bold; } QPushButton:hover { background:#208080; }</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+
+       <!-- cmd_vel readout -->
+       <item>
+        <widget class="QGroupBox" name="grp_cmdvel">
+         <property name="title"><string>/cmd_vel</string></property>
+         <property name="styleSheet">
+          <string notr="true">QGroupBox { color:#bbb; border:1px solid #444; border-radius:4px; margin-top:8px; padding-top:14px; } QGroupBox::title { subcontrol-origin: margin; left:10px; padding:0 4px; }</string>
+         </property>
+         <layout class="QHBoxLayout" name="cmdvel_layout">
+          <property name="spacing"><number>20</number></property>
+          <item>
+           <layout class="QVBoxLayout" name="linear_box">
+            <item>
+             <widget class="QLabel" name="lbl_linear_caption">
+              <property name="alignment"><set>Qt::AlignCenter</set></property>
+              <property name="text"><string>Linear.x  (m/s)</string></property>
+              <property name="styleSheet"><string notr="true">QLabel { color:#888; font-size:10pt; }</string></property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lbl_linear_value">
+              <property name="alignment"><set>Qt::AlignCenter</set></property>
+              <property name="text"><string>+0.00</string></property>
+              <property name="styleSheet"><string notr="true">QLabel { color:#7fcfff; font-family:monospace; font-size:36pt; font-weight:bold; }</string></property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="Line" name="separator">
+            <property name="orientation"><enum>Qt::Vertical</enum></property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="angular_box">
+            <item>
+             <widget class="QLabel" name="lbl_angular_caption">
+              <property name="alignment"><set>Qt::AlignCenter</set></property>
+              <property name="text"><string>Angular.z  (rad/s)</string></property>
+              <property name="styleSheet"><string notr="true">QLabel { color:#888; font-size:10pt; }</string></property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lbl_angular_value">
+              <property name="alignment"><set>Qt::AlignCenter</set></property>
+              <property name="text"><string>+0.00</string></property>
+              <property name="styleSheet"><string notr="true">QLabel { color:#ffcf7f; font-family:monospace; font-size:36pt; font-weight:bold; }</string></property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+
+       <!-- E-STOP buttons -->
+       <item>
+        <layout class="QHBoxLayout" name="estop_buttons_row">
+         <property name="spacing"><number>12</number></property>
+         <item>
+          <widget class="QPushButton" name="btn_soft_estop">
+           <property name="minimumSize"><size><width>0</width><height>56</height></size></property>
+           <property name="text"><string>SOFT E-STOP</string></property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton { background:#a02020; color:white; border:2px solid #ff4040; border-radius:6px; font-size:16pt; font-weight:bold; } QPushButton:hover { background:#c02020; } QPushButton:pressed { background:#801010; }</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btn_clear_latch">
+           <property name="minimumSize"><size><width>180</width><height>56</height></size></property>
+           <property name="text"><string>CLEAR LATCH</string></property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton { background:#3a3a1a; color:#ffe060; border:2px solid #b0a040; border-radius:6px; font-size:14pt; font-weight:bold; } QPushButton:hover { background:#4a4a1a; } QPushButton:pressed { background:#2a2a0a; }</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+
+       <!-- Joystick devices -->
+       <item>
+        <widget class="QGroupBox" name="grp_devices">
+         <property name="title"><string>Joysticks</string></property>
+         <property name="styleSheet">
+          <string notr="true">QGroupBox { color:#bbb; border:1px solid #444; border-radius:4px; margin-top:8px; padding-top:14px; } QGroupBox::title { subcontrol-origin: margin; left:10px; padding:0 4px; }</string>
+         </property>
+         <layout class="QHBoxLayout" name="devices_layout">
+          <property name="spacing"><number>8</number></property>
+          <item>
+           <layout class="QVBoxLayout" name="devices_left_col">
+            <property name="spacing"><number>4</number></property>
+            <item>
+             <widget class="QListWidget" name="lst_devices">
+              <property name="minimumSize"><size><width>0</width><height>40</height></size></property>
+              <property name="maximumSize"><size><width>16777215</width><height>60</height></size></property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lbl_joy_live">
+              <property name="text"><string>(joystick input live view — /joy 받으면 갱신)</string></property>
+              <property name="alignment"><set>Qt::AlignLeft|Qt::AlignVCenter</set></property>
+              <property name="wordWrap"><bool>false</bool></property>
+              <property name="minimumSize"><size><width>0</width><height>30</height></size></property>
+              <property name="maximumSize"><size><width>16777215</width><height>30</height></size></property>
+              <property name="styleSheet"><string notr="true">QLabel { background:#1e1e1e; color:#ddd; border:1px solid #444; border-radius:4px; padding:4px 8px; font-family:monospace; font-size:10pt; }</string></property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="devices_btn_col">
+            <property name="spacing"><number>6</number></property>
+            <item>
+             <widget class="QPushButton" name="btn_scan_devices">
+              <property name="minimumSize"><size><width>140</width><height>32</height></size></property>
+              <property name="text"><string>SCAN</string></property>
+              <property name="styleSheet"><string notr="true">QPushButton { background:#2a4a6a; color:white; border:1px solid #4080c0; border-radius:4px; font-weight:bold; }</string></property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btn_apply_device">
+              <property name="minimumSize"><size><width>140</width><height>32</height></size></property>
+              <property name="text"><string>APPLY</string></property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btn_analog_check">
+              <property name="minimumSize"><size><width>140</width><height>32</height></size></property>
+              <property name="text"><string>ANALOG CHECK</string></property>
+              <property name="toolTip"><string>5초간 axes/buttons 활동 측정 → ANALOG 모드 ON/OFF 자동 판정. Microntek 컨트롤러의 ANALOG 토글 LED 가 꺼진 채로 운전 시도 시 cmd_vel 가 0 으로 나가는 사고 방지.</string></property>
+              <property name="styleSheet"><string notr="true">QPushButton { background:#604020; color:white; border:1px solid #c0a040; border-radius:4px; font-weight:bold; } QPushButton:hover { background:#806030; }</string></property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="dev_spacer">
+              <property name="orientation"><enum>Qt::Vertical</enum></property>
+              <property name="sizeHint" stdset="0"><size><width>20</width><height>20</height></size></property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+
+      </layout>
+     </widget>
+     <!-- ================ END TAB 1 ================ -->
+
+     <!-- ================ TAB 2: Motor Launch ================ -->
+     <widget class="QWidget" name="tab_motor">
+      <attribute name="title"><string>Motor Launch</string></attribute>
+      <layout class="QVBoxLayout" name="motor_layout">
+       <property name="spacing"><number>10</number></property>
+
+       <item>
+        <widget class="QGroupBox" name="grp_launches">
+         <property name="title"><string>Motor Launches</string></property>
+         <property name="styleSheet">
+          <string notr="true">QGroupBox { color:#bbb; border:1px solid #444; border-radius:4px; margin-top:8px; padding-top:14px; } QGroupBox::title { subcontrol-origin: margin; left:10px; padding:0 4px; }</string>
+         </property>
+         <layout class="QGridLayout" name="launches_grid">
+          <property name="horizontalSpacing"><number>10</number></property>
+          <property name="verticalSpacing"><number>8</number></property>
+
+          <!-- Row 0: fito_amr_serial_bridge (must come up first; replaces micro-ROS) -->
+          <item row="0" column="0">
+           <widget class="QLabel" name="lbl_status_bridge">
+            <property name="minimumSize"><size><width>16</width><height>16</height></size></property>
+            <property name="maximumSize"><size><width>16</width><height>16</height></size></property>
+            <property name="text"><string/></property>
+            <property name="styleSheet"><string notr="true">QLabel { background:#555; border-radius:8px; }</string></property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="lbl_cap_bridge">
+            <property name="text"><string>serial_bridge (USB-CDC raw → ESP32)</string></property>
+            <property name="styleSheet"><string notr="true">QLabel { font-family:monospace; }</string></property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QPushButton" name="btn_start_bridge">
+            <property name="text"><string>Start</string></property>
+            <property name="styleSheet"><string notr="true">QPushButton { background:#2a5a2a; color:white; border:1px solid #4a8a4a; border-radius:4px; }</string></property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QPushButton" name="btn_stop_bridge">
+            <property name="text"><string>Stop</string></property>
+            <property name="styleSheet"><string notr="true">QPushButton { background:#5a2a2a; color:white; border:1px solid #8a4a4a; border-radius:4px; }</string></property>
+           </widget>
+          </item>
+
+          <!-- Row 1: diff_drive_controller -->
+          <item row="1" column="0">
+           <widget class="QLabel" name="lbl_status_diffdrive">
+            <property name="minimumSize"><size><width>16</width><height>16</height></size></property>
+            <property name="maximumSize"><size><width>16</width><height>16</height></size></property>
+            <property name="text"><string/></property>
+            <property name="styleSheet"><string notr="true">QLabel { background:#555; border-radius:8px; }</string></property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="lbl_cap_diffdrive">
+            <property name="text"><string>diff_drive_controller</string></property>
+            <property name="styleSheet"><string notr="true">QLabel { font-family:monospace; }</string></property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QPushButton" name="btn_start_diffdrive">
+            <property name="text"><string>Start</string></property>
+            <property name="styleSheet"><string notr="true">QPushButton { background:#2a5a2a; color:white; border:1px solid #4a8a4a; border-radius:4px; }</string></property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QPushButton" name="btn_stop_diffdrive">
+            <property name="text"><string>Stop</string></property>
+            <property name="styleSheet"><string notr="true">QPushButton { background:#5a2a2a; color:white; border:1px solid #8a4a4a; border-radius:4px; }</string></property>
+           </widget>
+          </item>
+
+          <!-- Row 2: odometry_node -->
+          <item row="2" column="0">
+           <widget class="QLabel" name="lbl_status_odom">
+            <property name="minimumSize"><size><width>16</width><height>16</height></size></property>
+            <property name="maximumSize"><size><width>16</width><height>16</height></size></property>
+            <property name="text"><string/></property>
+            <property name="styleSheet"><string notr="true">QLabel { background:#555; border-radius:8px; }</string></property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLabel" name="lbl_cap_odom">
+            <property name="text"><string>odometry_node</string></property>
+            <property name="styleSheet"><string notr="true">QLabel { font-family:monospace; }</string></property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QPushButton" name="btn_start_odom">
+            <property name="text"><string>Start</string></property>
+            <property name="styleSheet"><string notr="true">QPushButton { background:#2a5a2a; color:white; border:1px solid #4a8a4a; border-radius:4px; }</string></property>
+           </widget>
+          </item>
+          <item row="2" column="3">
+           <widget class="QPushButton" name="btn_stop_odom">
+            <property name="text"><string>Stop</string></property>
+            <property name="styleSheet"><string notr="true">QPushButton { background:#5a2a2a; color:white; border:1px solid #8a4a4a; border-radius:4px; }</string></property>
+           </widget>
+          </item>
+
+          <!-- Row 3: wheel_params_publisher -->
+          <item row="3" column="0">
+           <widget class="QLabel" name="lbl_status_wheel">
+            <property name="minimumSize"><size><width>16</width><height>16</height></size></property>
+            <property name="maximumSize"><size><width>16</width><height>16</height></size></property>
+            <property name="text"><string/></property>
+            <property name="styleSheet"><string notr="true">QLabel { background:#555; border-radius:8px; }</string></property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLabel" name="lbl_cap_wheel">
+            <property name="text"><string>wheel_params_publisher</string></property>
+            <property name="styleSheet"><string notr="true">QLabel { font-family:monospace; }</string></property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QPushButton" name="btn_start_wheel">
+            <property name="text"><string>Start</string></property>
+            <property name="styleSheet"><string notr="true">QPushButton { background:#2a5a2a; color:white; border:1px solid #4a8a4a; border-radius:4px; }</string></property>
+           </widget>
+          </item>
+          <item row="3" column="3">
+           <widget class="QPushButton" name="btn_stop_wheel">
+            <property name="text"><string>Stop</string></property>
+            <property name="styleSheet"><string notr="true">QPushButton { background:#5a2a2a; color:white; border:1px solid #8a4a4a; border-radius:4px; }</string></property>
+           </widget>
+          </item>
+
+          <!-- Row 4: motor_health_monitor -->
+          <item row="4" column="0">
+           <widget class="QLabel" name="lbl_status_motorhealth">
+            <property name="minimumSize"><size><width>16</width><height>16</height></size></property>
+            <property name="maximumSize"><size><width>16</width><height>16</height></size></property>
+            <property name="text"><string/></property>
+            <property name="styleSheet"><string notr="true">QLabel { background:#555; border-radius:8px; }</string></property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QLabel" name="lbl_cap_motorhealth">
+            <property name="text"><string>motor_health_monitor (heartbeat)</string></property>
+            <property name="styleSheet"><string notr="true">QLabel { font-family:monospace; }</string></property>
+           </widget>
+          </item>
+          <item row="4" column="2">
+           <widget class="QPushButton" name="btn_start_motorhealth">
+            <property name="text"><string>Start</string></property>
+            <property name="styleSheet"><string notr="true">QPushButton { background:#2a5a2a; color:white; border:1px solid #4a8a4a; border-radius:4px; }</string></property>
+           </widget>
+          </item>
+          <item row="4" column="3">
+           <widget class="QPushButton" name="btn_stop_motorhealth">
+            <property name="text"><string>Stop</string></property>
+            <property name="styleSheet"><string notr="true">QPushButton { background:#5a2a2a; color:white; border:1px solid #8a4a4a; border-radius:4px; }</string></property>
+           </widget>
+          </item>
+
+         </layout>
+        </widget>
+       </item>
+
+       <item>
+        <layout class="QHBoxLayout" name="all_btns_row">
+         <item>
+          <widget class="QPushButton" name="btn_start_all">
+           <property name="minimumSize"><size><width>180</width><height>36</height></size></property>
+           <property name="text"><string>START ALL MOTORS</string></property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton { background:#206020; color:white; border:2px solid #40c040; border-radius:6px; font-weight:bold; } QPushButton:hover { background:#208020; }</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btn_node_check">
+           <property name="minimumSize"><size><width>140</width><height>36</height></size></property>
+           <property name="text"><string>NODE CHECK</string></property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton { background:#204060; color:white; border:2px solid #4080c0; border-radius:6px; font-weight:bold; } QPushButton:hover { background:#205080; }</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="all_btns_spacer">
+           <property name="orientation"><enum>Qt::Horizontal</enum></property>
+           <property name="sizeHint" stdset="0"><size><width>20</width><height>20</height></size></property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btn_stop_all">
+           <property name="minimumSize"><size><width>180</width><height>36</height></size></property>
+           <property name="text"><string>STOP ALL MOTORS</string></property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton { background:#7a2020; color:white; border:2px solid #ff4040; border-radius:6px; font-weight:bold; } QPushButton:hover { background:#9a2020; }</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+
+       <item>
+        <widget class="QGroupBox" name="grp_log">
+         <property name="title"><string>Output Log</string></property>
+         <property name="styleSheet">
+          <string notr="true">QGroupBox { color:#bbb; border:1px solid #444; border-radius:4px; margin-top:8px; padding-top:14px; } QGroupBox::title { subcontrol-origin: margin; left:10px; padding:0 4px; }</string>
+         </property>
+         <layout class="QVBoxLayout" name="log_layout">
+          <item>
+           <widget class="QPlainTextEdit" name="txt_log">
+            <property name="readOnly"><bool>true</bool></property>
+            <property name="maximumBlockCount"><number>200</number></property>
+            <property name="styleSheet"><string notr="true">QPlainTextEdit { font-family:monospace; font-size:9pt; }</string></property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="log_btns">
+            <item>
+             <spacer name="log_spacer">
+              <property name="orientation"><enum>Qt::Horizontal</enum></property>
+              <property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btn_clear_log">
+              <property name="text"><string>Clear Log</string></property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+
+      </layout>
+     </widget>
+     <!-- ================ END TAB 2 ================ -->
+
+     <!-- ================ TAB 3: Settings ================ -->
+     <widget class="QWidget" name="tab_settings">
+      <attribute name="title"><string>Settings</string></attribute>
+      <layout class="QVBoxLayout" name="settings_layout">
+       <property name="spacing"><number>12</number></property>
+
+       <item>
+        <widget class="QGroupBox" name="grp_speed_limits">
+         <property name="title"><string>Stage 1 — Teleop Velocity Limits  (cmd_vel cap on active teleop node)</string></property>
+         <property name="styleSheet">
+          <string notr="true">QGroupBox { color:#bbb; border:1px solid #444; border-radius:4px; margin-top:8px; padding-top:14px; } QGroupBox::title { subcontrol-origin: margin; left:10px; padding:0 4px; }</string>
+         </property>
+         <layout class="QGridLayout" name="speed_grid">
+          <property name="horizontalSpacing"><number>14</number></property>
+          <property name="verticalSpacing"><number>10</number></property>
+
+          <!-- Row 0: Linear -->
+          <item row="0" column="0">
+           <widget class="QLabel" name="lbl_cap_linear">
+            <property name="text"><string>Max linear (m/s)</string></property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QDoubleSpinBox" name="spin_max_linear">
+            <property name="minimumSize"><size><width>120</width><height>30</height></size></property>
+            <property name="decimals"><number>2</number></property>
+            <property name="minimum"><double>0.05</double></property>
+            <property name="maximum"><double>2.00</double></property>
+            <property name="singleStep"><double>0.05</double></property>
+            <property name="value"><double>2.00</double></property>
+            <property name="suffix"><string> m/s</string></property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="lbl_linear_current">
+            <property name="text"><string>(current: --)</string></property>
+            <property name="styleSheet"><string notr="true">QLabel { color:#888; font-family:monospace; }</string></property>
+           </widget>
+          </item>
+
+          <!-- Row 1: Angular (deg/s on the UI, converted to rad/s when published) -->
+          <item row="1" column="0">
+           <widget class="QLabel" name="lbl_cap_angular">
+            <property name="text"><string>Max angular (deg/s)</string></property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="spin_max_angular_deg">
+            <property name="minimumSize"><size><width>120</width><height>30</height></size></property>
+            <property name="decimals"><number>1</number></property>
+            <property name="minimum"><double>1.0</double></property>
+            <property name="maximum"><double>120.0</double></property>
+            <property name="singleStep"><double>1.0</double></property>
+            <property name="value"><double>30.0</double></property>
+            <property name="suffix"><string> deg/s</string></property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="lbl_angular_current">
+            <property name="text"><string>(current: --)</string></property>
+            <property name="styleSheet"><string notr="true">QLabel { color:#888; font-family:monospace; }</string></property>
+           </widget>
+          </item>
+
+          <!-- Row 2: target node + buttons -->
+          <item row="2" column="0">
+           <widget class="QLabel" name="lbl_cap_target">
+            <property name="text"><string>Target teleop node</string></property>
+           </widget>
+          </item>
+          <item row="2" column="1" colspan="2">
+           <widget class="QComboBox" name="cmb_target_node">
+            <property name="minimumSize"><size><width>200</width><height>30</height></size></property>
+            <item><property name="text"><string>/microntek_teleop</string></property></item>
+            <item><property name="text"><string>/pro_controller_teleop</string></property></item>
+           </widget>
+          </item>
+
+         </layout>
+        </widget>
+       </item>
+
+       <item>
+        <layout class="QHBoxLayout" name="settings_btn_row">
+         <property name="spacing"><number>10</number></property>
+         <item>
+          <widget class="QPushButton" name="btn_settings_apply">
+           <property name="minimumSize"><size><width>140</width><height>40</height></size></property>
+           <property name="text"><string>APPLY</string></property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton { background:#206020; color:white; border:2px solid #40c040; border-radius:6px; font-weight:bold; } QPushButton:hover { background:#208020; }</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btn_settings_refresh">
+           <property name="minimumSize"><size><width>140</width><height>40</height></size></property>
+           <property name="text"><string>REFRESH</string></property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton { background:#204060; color:white; border:2px solid #4080c0; border-radius:6px; font-weight:bold; } QPushButton:hover { background:#205080; }</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btn_settings_defaults">
+           <property name="minimumSize"><size><width>180</width><height>40</height></size></property>
+           <property name="text"><string>RESET TO 2.0 / 30°</string></property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton { background:#3a3a3a; color:#ddd; border:1px solid #777; border-radius:6px; font-weight:bold; } QPushButton:hover { background:#4a4a4a; }</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="settings_btn_spacer">
+           <property name="orientation"><enum>Qt::Horizontal</enum></property>
+           <property name="sizeHint" stdset="0"><size><width>20</width><height>20</height></size></property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+
+       <item>
+        <widget class="QLabel" name="lbl_settings_hint">
+         <property name="wordWrap"><bool>true</bool></property>
+         <property name="text"><string>NOTE: Stage 1 caps cmd_vel at the teleop node — joystick → /cmd_vel limit. APPLY calls /set_parameters (live, no restart). For permanence, edit microntek_teleop.yaml + rebuild. Operational defaults (2026-05-07): 2.0 m/s, 0.5236 rad/s = 30°/s — rpm_limit_2026-05-06.md.</string></property>
+         <property name="styleSheet"><string notr="true">QLabel { color:#888; font-size:9pt; padding:6px; }</string></property>
+        </widget>
+       </item>
+
+       <item>
+        <widget class="QGroupBox" name="grp_fw_rpm_limits">
+         <property name="title"><string>Stage 2 — Firmware Motor Limits  (ESP32 NVS, kinematics-converted to motor RPM)</string></property>
+         <property name="styleSheet">
+          <string notr="true">QGroupBox { color:#bbb; border:1px solid #444; border-radius:4px; margin-top:8px; padding-top:14px; } QGroupBox::title { subcontrol-origin: margin; left:10px; padding:0 4px; }</string>
+         </property>
+         <layout class="QGridLayout" name="fw_rpm_grid">
+          <property name="horizontalSpacing"><number>14</number></property>
+          <property name="verticalSpacing"><number>10</number></property>
+
+          <item row="0" column="0">
+           <widget class="QLabel" name="lbl_cap_fw_lin"><property name="text"><string>Max linear (m/s)</string></property></widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QDoubleSpinBox" name="spin_fw_max_lin">
+            <property name="minimumSize"><size><width>120</width><height>30</height></size></property>
+            <property name="decimals"><number>2</number></property>
+            <property name="minimum"><double>0.01</double></property>
+            <property name="maximum"><double>3.00</double></property>
+            <property name="singleStep"><double>0.05</double></property>
+            <property name="value"><double>2.00</double></property>
+            <property name="suffix"><string> m/s</string></property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="lbl_fw_lin_status">
+            <property name="text"><string>RAM: --   NVS: --</string></property>
+            <property name="styleSheet"><string notr="true">QLabel { color:#888; font-family:monospace; }</string></property>
+           </widget>
+          </item>
+
+          <item row="1" column="0">
+           <widget class="QLabel" name="lbl_cap_fw_rot"><property name="text"><string>Max angular (deg/s)</string></property></widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="spin_fw_max_rot">
+            <property name="minimumSize"><size><width>120</width><height>30</height></size></property>
+            <property name="decimals"><number>1</number></property>
+            <property name="minimum"><double>1.0</double></property>
+            <property name="maximum"><double>360.0</double></property>
+            <property name="singleStep"><double>1.0</double></property>
+            <property name="value"><double>30.0</double></property>
+            <property name="suffix"><string> deg/s</string></property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="lbl_fw_rot_status">
+            <property name="text"><string>RAM: --   NVS: --</string></property>
+            <property name="styleSheet"><string notr="true">QLabel { color:#888; font-family:monospace; }</string></property>
+           </widget>
+          </item>
+
+          <item row="2" column="0">
+           <widget class="QLabel" name="lbl_cap_fw_kine"><property name="text"><string>Kinematics</string></property></widget>
+          </item>
+          <item row="2" column="1" colspan="2">
+           <widget class="QLabel" name="lbl_fw_kine">
+            <property name="text"><string>(querying /diff_drive_controller ...)</string></property>
+            <property name="styleSheet"><string notr="true">QLabel { color:#888; font-family:monospace; font-size:9pt; }</string></property>
+           </widget>
+          </item>
+
+          <item row="3" column="0">
+           <widget class="QLabel" name="lbl_cap_fw_source"><property name="text"><string>Source</string></property></widget>
+          </item>
+          <item row="3" column="1" colspan="2">
+           <widget class="QLabel" name="lbl_fw_source">
+            <property name="text"><string>--</string></property>
+            <property name="styleSheet"><string notr="true">QLabel { color:#888; font-family:monospace; }</string></property>
+           </widget>
+          </item>
+
+         </layout>
+        </widget>
+       </item>
+
+       <item>
+        <layout class="QHBoxLayout" name="fw_btn_row">
+         <property name="spacing"><number>10</number></property>
+         <item>
+          <widget class="QPushButton" name="btn_fw_apply_ram">
+           <property name="minimumSize"><size><width>160</width><height>40</height></size></property>
+           <property name="text"><string>APPLY (RAM only)</string></property>
+           <property name="toolTip"><string>Send #L with persist=0 — values active until next reboot, NVS untouched</string></property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton { background:#604020; color:white; border:2px solid #c0a040; border-radius:6px; font-weight:bold; } QPushButton:hover { background:#806030; }</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btn_fw_apply_nvs">
+           <property name="minimumSize"><size><width>180</width><height>40</height></size></property>
+           <property name="text"><string>APPLY &amp;&amp; SAVE (NVS)</string></property>
+           <property name="toolTip"><string>Send #L with persist=1 — values active AND saved to ESP32 NVS, survive reboot</string></property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton { background:#206020; color:white; border:2px solid #40c040; border-radius:6px; font-weight:bold; } QPushButton:hover { background:#208020; }</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btn_fw_load_nvs">
+           <property name="minimumSize"><size><width>160</width><height>40</height></size></property>
+           <property name="text"><string>LOAD FROM NVS</string></property>
+           <property name="toolTip"><string>Read EEPROM-saved values from ESP32 NVS and populate spinboxes (so user can edit and APPLY). Sends #G; on #I echo, fills spinboxes with nvs_lin/nvs_rot fields (survives reboot).</string></property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton { background:#206060; color:white; border:2px solid #40a0a0; border-radius:6px; font-weight:bold; } QPushButton:hover { background:#208080; }</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btn_fw_refresh">
+           <property name="minimumSize"><size><width>140</width><height>40</height></size></property>
+           <property name="text"><string>REFRESH</string></property>
+           <property name="toolTip"><string>Monitor: send #G, display RAM/NVS values in labels (does NOT touch spinboxes — use LOAD FROM NVS for that).</string></property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton { background:#204060; color:white; border:2px solid #4080c0; border-radius:6px; font-weight:bold; } QPushButton:hover { background:#205080; }</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="fw_btn_spacer">
+           <property name="orientation"><enum>Qt::Horizontal</enum></property>
+           <property name="sizeHint" stdset="0"><size><width>20</width><height>20</height></size></property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+
+       <item>
+        <widget class="QLabel" name="lbl_fw_hint">
+         <property name="wordWrap"><bool>true</bool></property>
+         <property name="text"><string>NOTE: Stage 2 clamps motor RPM in firmware (SSOT). Speed limits are converted via wheel kinematics before #L. WRITE: APPLY (RAM)=transient, APPLY &amp;&amp; SAVE=NVS persistent. READ: REFRESH=monitor labels, LOAD FROM NVS=fill spinbox with EEPROM-saved values (then edit + APPLY). Operational defaults (2026-05-07): 2.0 m/s · 30°/s — rpm_limit_2026-05-06.md.</string></property>
+         <property name="styleSheet"><string notr="true">QLabel { color:#888; font-size:9pt; padding:6px; }</string></property>
+        </widget>
+       </item>
+
+       <item>
+        <widget class="QPlainTextEdit" name="txt_settings_log">
+         <property name="readOnly"><bool>true</bool></property>
+         <property name="maximumBlockCount"><number>100</number></property>
+         <property name="minimumSize"><size><width>0</width><height>120</height></size></property>
+         <property name="styleSheet"><string notr="true">QPlainTextEdit { font-family:monospace; font-size:9pt; }</string></property>
+        </widget>
+       </item>
+
+       <item>
+        <spacer name="settings_v_spacer">
+         <property name="orientation"><enum>Qt::Vertical</enum></property>
+         <property name="sizeHint" stdset="0"><size><width>20</width><height>20</height></size></property>
+        </spacer>
+       </item>
+
+      </layout>
+     </widget>
+     <!-- ================ END TAB 3 ================ -->
+
+     <!-- ================ TAB 4: Pipeline Health ================ -->
+     <widget class="QWidget" name="tab_health">
+      <attribute name="title"><string>Pipeline Health</string></attribute>
+      <layout class="QVBoxLayout" name="health_layout">
+       <property name="spacing"><number>8</number></property>
+
+       <item>
+        <widget class="QLabel" name="lbl_health_summary">
+         <property name="text"><string>(querying chain ...)</string></property>
+         <property name="alignment"><set>Qt::AlignCenter</set></property>
+         <property name="minimumSize"><size><width>0</width><height>50</height></size></property>
+         <property name="styleSheet"><string notr="true">QLabel { background:#2a2a2a; color:#ddd; border:1px solid #555; border-radius:6px; padding:8px; font-size:13pt; font-weight:bold; }</string></property>
+        </widget>
+       </item>
+
+       <item>
+        <widget class="QTableWidget" name="tbl_health">
+         <property name="alternatingRowColors"><bool>true</bool></property>
+         <property name="selectionMode"><enum>QAbstractItemView::NoSelection</enum></property>
+         <property name="editTriggers"><set>QAbstractItemView::NoEditTriggers</set></property>
+         <property name="showGrid"><bool>false</bool></property>
+         <property name="verticalScrollBarPolicy"><enum>Qt::ScrollBarAsNeeded</enum></property>
+         <property name="styleSheet"><string notr="true">QTableWidget { background:#1e1e1e; alternate-background-color:#252525; color:#ddd; gridline-color:#444; font-family:monospace; } QTableWidget::item { padding:4px; } QHeaderView::section { background:#2a2a2a; color:#aaa; padding:4px; border:1px solid #444; font-weight:bold; }</string></property>
+         <attribute name="horizontalHeaderStretchLastSection"><bool>true</bool></attribute>
+        </widget>
+       </item>
+
+       <item>
+        <widget class="QLabel" name="lbl_health_hint">
+         <property name="wordWrap"><bool>true</bool></property>
+         <property name="text"><string>NOTE: 10 link chain from joystick → motors. Status dot: green=active(&lt;1s), yellow=stale(1-5s), red=down(&gt;5s or no publishers), gray=idle. Hz column = recent rate. Each link's failure-mode catalog is in docs/sw-architecture/pipeline_chain_failure_modes_2026-05-08.md.</string></property>
+         <property name="styleSheet"><string notr="true">QLabel { color:#888; font-size:9pt; padding:6px; }</string></property>
+        </widget>
+       </item>
+
+      </layout>
+     </widget>
+     <!-- ================ END TAB 4 ================ -->
+
+    </widget>
+   </item>
+
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

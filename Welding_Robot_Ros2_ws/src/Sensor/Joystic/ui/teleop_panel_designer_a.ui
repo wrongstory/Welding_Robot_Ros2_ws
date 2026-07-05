@@ -1,0 +1,469 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TeleopPanel</class>
+ <widget class="QWidget" name="TeleopPanel">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>900</width>
+    <height>620</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>FITO AMR Teleop</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QWidget#TeleopPanel { background-color: #1e1e1e; color: #f0f0f0; }
+QGroupBox { color: #f0f0f0; border: 1px solid #444; border-radius: 4px; margin-top: 10px; font-weight: bold; }
+QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 4px; }
+QLabel { color: #f0f0f0; }
+QPushButton { background-color: #2d2d2d; color: #f0f0f0; border: 1px solid #555; padding: 6px; border-radius: 3px; }
+QPushButton:hover { background-color: #3a3a3a; }
+QComboBox { background-color: #2d2d2d; color: #f0f0f0; border: 1px solid #555; padding: 4px; }
+QProgressBar { border: 1px solid #555; border-radius: 3px; text-align: center; background-color: #111; color: #f0f0f0; }
+QProgressBar::chunk { background-color: #2e8b57; }</string>
+  </property>
+  <layout class="QVBoxLayout" name="rootLayout">
+   <property name="spacing">
+    <number>8</number>
+   </property>
+   <property name="leftMargin">
+    <number>10</number>
+   </property>
+   <property name="topMargin">
+    <number>10</number>
+   </property>
+   <property name="rightMargin">
+    <number>10</number>
+   </property>
+   <property name="bottomMargin">
+    <number>10</number>
+   </property>
+
+   <!-- ========== TOP STATUS BAR ========== -->
+   <item>
+    <widget class="QFrame" name="topStatusFrame">
+     <property name="minimumSize">
+      <size><width>0</width><height>90</height></size>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <layout class="QHBoxLayout" name="topStatusLayout">
+      <property name="spacing">
+       <number>10</number>
+      </property>
+
+      <!-- BIG E-STOP STATUS BANNER -->
+      <item>
+       <widget class="QLabel" name="estopBanner">
+        <property name="minimumSize">
+         <size><width>320</width><height>70</height></size>
+        </property>
+        <property name="text">
+         <string>READY</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QLabel#estopBanner { background-color: #1f4f1f; color: #d8ffd8; font-size: 36pt; font-weight: 900; border: 3px solid #3acb3a; border-radius: 6px; letter-spacing: 4px; }</string>
+        </property>
+       </widget>
+      </item>
+
+      <!-- DEAD-MAN INDICATOR -->
+      <item>
+       <widget class="QLabel" name="deadmanIndicator">
+        <property name="minimumSize">
+         <size><width>180</width><height>70</height></size>
+        </property>
+        <property name="text">
+         <string>DEAD-MAN
+RELEASED</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QLabel#deadmanIndicator { background-color: #333; color: #999; font-size: 14pt; font-weight: bold; border: 2px solid #555; border-radius: 6px; }</string>
+        </property>
+       </widget>
+      </item>
+
+      <!-- CONNECTION STATUS -->
+      <item>
+       <widget class="QFrame" name="connFrame">
+        <property name="minimumSize">
+         <size><width>200</width><height>70</height></size>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::StyledPanel</enum>
+        </property>
+        <layout class="QVBoxLayout" name="connLayout">
+         <property name="spacing"><number>2</number></property>
+         <property name="leftMargin"><number>6</number></property>
+         <property name="topMargin"><number>4</number></property>
+         <property name="rightMargin"><number>6</number></property>
+         <property name="bottomMargin"><number>4</number></property>
+         <item>
+          <widget class="QLabel" name="joyConnLabel">
+           <property name="text"><string>JOY: -- </string></property>
+           <property name="styleSheet"><string notr="true">font-size: 11pt; font-weight: bold;</string></property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="joyTopicLabel">
+           <property name="text"><string>/joy: -- Hz</string></property>
+           <property name="styleSheet"><string notr="true">font-size: 10pt; color: #aaa;</string></property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="cmdvelTopicLabel">
+           <property name="text"><string>/cmd_vel: -- Hz</string></property>
+           <property name="styleSheet"><string notr="true">font-size: 10pt; color: #aaa;</string></property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+
+      <!-- SOFT E-STOP BUTTON -->
+      <item>
+       <widget class="QPushButton" name="softEstopButton">
+        <property name="minimumSize">
+         <size><width>140</width><height>70</height></size>
+        </property>
+        <property name="text">
+         <string>SOFT
+E-STOP</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QPushButton#softEstopButton { background-color: #8b0000; color: white; font-size: 14pt; font-weight: 900; border: 3px solid #ff3030; border-radius: 6px; }
+QPushButton#softEstopButton:hover { background-color: #b00000; }
+QPushButton#softEstopButton:pressed { background-color: #ff0000; }</string>
+        </property>
+       </widget>
+      </item>
+
+      <item>
+       <widget class="QPushButton" name="clearEstopButton">
+        <property name="minimumSize">
+         <size><width>110</width><height>70</height></size>
+        </property>
+        <property name="text">
+         <string>CLEAR
+LATCH</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QPushButton#clearEstopButton { background-color: #444400; color: #ffff80; font-size: 11pt; font-weight: bold; border: 2px solid #aaaa00; border-radius: 6px; }
+QPushButton#clearEstopButton:hover { background-color: #666600; }</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+
+   <!-- ========== MIDDLE ROW: CMD_VEL DASHBOARD + JOY VISUAL ========== -->
+   <item>
+    <layout class="QHBoxLayout" name="middleLayout">
+     <property name="spacing"><number>10</number></property>
+
+     <!-- CMD_VEL DASHBOARD -->
+     <item>
+      <widget class="QGroupBox" name="cmdVelGroup">
+       <property name="title">
+        <string>CMD_VEL OUTPUT</string>
+       </property>
+       <property name="minimumSize">
+        <size><width>420</width><height>280</height></size>
+       </property>
+       <layout class="QGridLayout" name="cmdVelGrid">
+        <property name="leftMargin"><number>10</number></property>
+        <property name="topMargin"><number>20</number></property>
+        <property name="rightMargin"><number>10</number></property>
+        <property name="bottomMargin"><number>10</number></property>
+        <property name="horizontalSpacing"><number>10</number></property>
+        <property name="verticalSpacing"><number>8</number></property>
+
+        <!-- LINEAR -->
+        <item row="0" column="0">
+         <widget class="QLabel" name="linearTitleLabel">
+          <property name="text"><string>LINEAR  X</string></property>
+          <property name="styleSheet"><string notr="true">font-size: 13pt; font-weight: bold; color: #88ccff;</string></property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLabel" name="linearValueLabel">
+          <property name="text"><string>+0.00 m/s</string></property>
+          <property name="alignment"><set>Qt::AlignRight|Qt::AlignVCenter</set></property>
+          <property name="styleSheet"><string notr="true">font-size: 22pt; font-weight: 900; color: #ffffff; font-family: monospace;</string></property>
+         </widget>
+        </item>
+        <item row="1" column="0" colspan="2">
+         <widget class="QProgressBar" name="linearBarPos">
+          <property name="minimum"><number>0</number></property>
+          <property name="maximum"><number>1000</number></property>
+          <property name="value"><number>0</number></property>
+          <property name="textVisible"><bool>false</bool></property>
+          <property name="minimumSize"><size><width>0</width><height>24</height></size></property>
+          <property name="styleSheet"><string notr="true">QProgressBar::chunk { background-color: #2e8b57; }</string></property>
+         </widget>
+        </item>
+        <item row="2" column="0" colspan="2">
+         <widget class="QProgressBar" name="linearBarNeg">
+          <property name="minimum"><number>0</number></property>
+          <property name="maximum"><number>1000</number></property>
+          <property name="value"><number>0</number></property>
+          <property name="textVisible"><bool>false</bool></property>
+          <property name="invertedAppearance"><bool>true</bool></property>
+          <property name="minimumSize"><size><width>0</width><height>24</height></size></property>
+          <property name="styleSheet"><string notr="true">QProgressBar::chunk { background-color: #b8860b; }</string></property>
+         </widget>
+        </item>
+
+        <!-- ANGULAR -->
+        <item row="3" column="0">
+         <widget class="QLabel" name="angularTitleLabel">
+          <property name="text"><string>ANGULAR Z</string></property>
+          <property name="styleSheet"><string notr="true">font-size: 13pt; font-weight: bold; color: #ffaa66;</string></property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QLabel" name="angularValueLabel">
+          <property name="text"><string>+0.00 rad/s</string></property>
+          <property name="alignment"><set>Qt::AlignRight|Qt::AlignVCenter</set></property>
+          <property name="styleSheet"><string notr="true">font-size: 22pt; font-weight: 900; color: #ffffff; font-family: monospace;</string></property>
+         </widget>
+        </item>
+        <item row="4" column="0" colspan="2">
+         <widget class="QProgressBar" name="angularBarLeft">
+          <property name="minimum"><number>0</number></property>
+          <property name="maximum"><number>1000</number></property>
+          <property name="value"><number>0</number></property>
+          <property name="textVisible"><bool>false</bool></property>
+          <property name="invertedAppearance"><bool>true</bool></property>
+          <property name="minimumSize"><size><width>0</width><height>24</height></size></property>
+          <property name="styleSheet"><string notr="true">QProgressBar::chunk { background-color: #d2691e; }</string></property>
+         </widget>
+        </item>
+        <item row="5" column="0" colspan="2">
+         <widget class="QProgressBar" name="angularBarRight">
+          <property name="minimum"><number>0</number></property>
+          <property name="maximum"><number>1000</number></property>
+          <property name="value"><number>0</number></property>
+          <property name="textVisible"><bool>false</bool></property>
+          <property name="minimumSize"><size><width>0</width><height>24</height></size></property>
+          <property name="styleSheet"><string notr="true">QProgressBar::chunk { background-color: #d2691e; }</string></property>
+         </widget>
+        </item>
+
+        <!-- LIMITS -->
+        <item row="6" column="0">
+         <widget class="QLabel" name="limitTitleLabel">
+          <property name="text"><string>MAX</string></property>
+          <property name="styleSheet"><string notr="true">color: #888;</string></property>
+         </widget>
+        </item>
+        <item row="6" column="1">
+         <widget class="QLabel" name="limitValueLabel">
+          <property name="text"><string>lin 1.00 m/s   ang 1.50 rad/s</string></property>
+          <property name="alignment"><set>Qt::AlignRight|Qt::AlignVCenter</set></property>
+          <property name="styleSheet"><string notr="true">color: #aaa; font-family: monospace;</string></property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+
+     <!-- JOYSTICK VISUAL -->
+     <item>
+      <widget class="QGroupBox" name="joyVisualGroup">
+       <property name="title">
+        <string>STICK INPUT</string>
+       </property>
+       <property name="minimumSize">
+        <size><width>440</width><height>280</height></size>
+       </property>
+       <layout class="QHBoxLayout" name="joyVisualLayout">
+        <property name="spacing"><number>10</number></property>
+        <property name="leftMargin"><number>10</number></property>
+        <property name="topMargin"><number>20</number></property>
+
+        <!-- LEFT STICK -->
+        <item>
+         <layout class="QVBoxLayout" name="leftStickLayout">
+          <item>
+           <widget class="QLabel" name="leftStickLabel">
+            <property name="text"><string>LEFT STICK</string></property>
+            <property name="alignment"><set>Qt::AlignCenter</set></property>
+            <property name="styleSheet"><string notr="true">font-weight: bold; color: #88ccff;</string></property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="leftStickPad">
+            <property name="minimumSize"><size><width>200</width><height>200</height></size></property>
+            <property name="text"><string/></property>
+            <property name="styleSheet">
+             <string notr="true">QLabel#leftStickPad { background-color: #0a0a0a; border: 2px solid #555; border-radius: 100px; }</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+
+        <!-- RIGHT STICK -->
+        <item>
+         <layout class="QVBoxLayout" name="rightStickLayout">
+          <item>
+           <widget class="QLabel" name="rightStickLabel">
+            <property name="text"><string>RIGHT STICK</string></property>
+            <property name="alignment"><set>Qt::AlignCenter</set></property>
+            <property name="styleSheet"><string notr="true">font-weight: bold; color: #ffaa66;</string></property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="rightStickPad">
+            <property name="minimumSize"><size><width>200</width><height>200</height></size></property>
+            <property name="text"><string/></property>
+            <property name="styleSheet">
+             <string notr="true">QLabel#rightStickPad { background-color: #0a0a0a; border: 2px solid #555; border-radius: 100px; }</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+     </item>
+    </layout>
+   </item>
+
+   <!-- ========== BOTTOM ROW: CONTROLLER SELECTOR + BUTTON LAMPS ========== -->
+   <item>
+    <layout class="QHBoxLayout" name="bottomLayout">
+     <property name="spacing"><number>10</number></property>
+
+     <!-- CONTROLLER + PROFILE -->
+     <item>
+      <widget class="QGroupBox" name="controllerGroup">
+       <property name="title">
+        <string>CONTROLLER</string>
+       </property>
+       <property name="minimumSize">
+        <size><width>280</width><height>170</height></size>
+       </property>
+       <layout class="QVBoxLayout" name="controllerLayout">
+        <property name="leftMargin"><number>10</number></property>
+        <property name="topMargin"><number>22</number></property>
+        <property name="rightMargin"><number>10</number></property>
+        <property name="bottomMargin"><number>10</number></property>
+        <property name="spacing"><number>6</number></property>
+
+        <item>
+         <widget class="QLabel" name="controllerSelectLabel">
+          <property name="text"><string>Device</string></property>
+          <property name="styleSheet"><string notr="true">color: #aaa;</string></property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="controllerCombo">
+          <property name="minimumSize"><size><width>0</width><height>30</height></size></property>
+          <item>
+           <property name="text"><string>Nintendo Switch Pro (BT)</string></property>
+          </item>
+          <item>
+           <property name="text"><string>Microntek USB (Wired)</string></property>
+          </item>
+         </widget>
+        </item>
+
+        <item>
+         <widget class="QLabel" name="profileSelectLabel">
+          <property name="text"><string>Profile</string></property>
+          <property name="styleSheet"><string notr="true">color: #aaa;</string></property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="profileCombo">
+          <property name="minimumSize"><size><width>0</width><height>30</height></size></property>
+          <item>
+           <property name="text"><string>Default</string></property>
+          </item>
+          <item>
+           <property name="text"><string>Slow / Indoor</string></property>
+          </item>
+          <item>
+           <property name="text"><string>Fast / Outdoor</string></property>
+          </item>
+         </widget>
+        </item>
+
+        <item>
+         <widget class="QPushButton" name="reloadConfigButton">
+          <property name="text"><string>Reload YAML</string></property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+
+     <!-- BUTTON LAMPS -->
+     <item>
+      <widget class="QGroupBox" name="buttonsGroup">
+       <property name="title">
+        <string>BUTTONS</string>
+       </property>
+       <property name="minimumSize">
+        <size><width>0</width><height>170</height></size>
+       </property>
+       <layout class="QGridLayout" name="buttonsGrid">
+        <property name="leftMargin"><number>10</number></property>
+        <property name="topMargin"><number>22</number></property>
+        <property name="rightMargin"><number>10</number></property>
+        <property name="bottomMargin"><number>10</number></property>
+        <property name="horizontalSpacing"><number>6</number></property>
+        <property name="verticalSpacing"><number>6</number></property>
+
+        <item row="0" column="0"><widget class="QLabel" name="lampL1"><property name="text"><string>L1
+ESTOP</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="minimumSize"><size><width>70</width><height>50</height></size></property><property name="styleSheet"><string notr="true">QLabel { background:#222; color:#888; border:1px solid #555; border-radius:4px; font-weight:bold; }</string></property></widget></item>
+        <item row="0" column="1"><widget class="QLabel" name="lampR1"><property name="text"><string>R1
+ESTOP</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="minimumSize"><size><width>70</width><height>50</height></size></property><property name="styleSheet"><string notr="true">QLabel { background:#222; color:#888; border:1px solid #555; border-radius:4px; font-weight:bold; }</string></property></widget></item>
+        <item row="0" column="2"><widget class="QLabel" name="lampL2"><property name="text"><string>L2
+DEADMAN</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="minimumSize"><size><width>70</width><height>50</height></size></property><property name="styleSheet"><string notr="true">QLabel { background:#222; color:#888; border:1px solid #555; border-radius:4px; font-weight:bold; }</string></property></widget></item>
+        <item row="0" column="3"><widget class="QLabel" name="lampR2"><property name="text"><string>R2
+DEADMAN</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="minimumSize"><size><width>70</width><height>50</height></size></property><property name="styleSheet"><string notr="true">QLabel { background:#222; color:#888; border:1px solid #555; border-radius:4px; font-weight:bold; }</string></property></widget></item>
+        <item row="0" column="4"><widget class="QLabel" name="lampStart"><property name="text"><string>START
+CLEAR</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="minimumSize"><size><width>70</width><height>50</height></size></property><property name="styleSheet"><string notr="true">QLabel { background:#222; color:#888; border:1px solid #555; border-radius:4px; font-weight:bold; }</string></property></widget></item>
+        <item row="0" column="5"><widget class="QLabel" name="lampSelect"><property name="text"><string>SELECT</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="minimumSize"><size><width>70</width><height>50</height></size></property><property name="styleSheet"><string notr="true">QLabel { background:#222; color:#888; border:1px solid #555; border-radius:4px; font-weight:bold; }</string></property></widget></item>
+
+        <item row="1" column="0"><widget class="QLabel" name="lampA"><property name="text"><string>A</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="minimumSize"><size><width>70</width><height>50</height></size></property><property name="styleSheet"><string notr="true">QLabel { background:#222; color:#888; border:1px solid #555; border-radius:4px; font-weight:bold; }</string></property></widget></item>
+        <item row="1" column="1"><widget class="QLabel" name="lampB"><property name="text"><string>B</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="minimumSize"><size><width>70</width><height>50</height></size></property><property name="styleSheet"><string notr="true">QLabel { background:#222; color:#888; border:1px solid #555; border-radius:4px; font-weight:bold; }</string></property></widget></item>
+        <item row="1" column="2"><widget class="QLabel" name="lampX"><property name="text"><string>X</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="minimumSize"><size><width>70</width><height>50</height></size></property><property name="styleSheet"><string notr="true">QLabel { background:#222; color:#888; border:1px solid #555; border-radius:4px; font-weight:bold; }</string></property></widget></item>
+        <item row="1" column="3"><widget class="QLabel" name="lampY"><property name="text"><string>Y</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="minimumSize"><size><width>70</width><height>50</height></size></property><property name="styleSheet"><string notr="true">QLabel { background:#222; color:#888; border:1px solid #555; border-radius:4px; font-weight:bold; }</string></property></widget></item>
+        <item row="1" column="4"><widget class="QLabel" name="lampLStick"><property name="text"><string>L3</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="minimumSize"><size><width>70</width><height>50</height></size></property><property name="styleSheet"><string notr="true">QLabel { background:#222; color:#888; border:1px solid #555; border-radius:4px; font-weight:bold; }</string></property></widget></item>
+        <item row="1" column="5"><widget class="QLabel" name="lampRStick"><property name="text"><string>R3</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="minimumSize"><size><width>70</width><height>50</height></size></property><property name="styleSheet"><string notr="true">QLabel { background:#222; color:#888; border:1px solid #555; border-radius:4px; font-weight:bold; }</string></property></widget></item>
+       </layout>
+      </widget>
+     </item>
+    </layout>
+   </item>
+
+   <!-- ========== STATUS BAR ========== -->
+   <item>
+    <widget class="QLabel" name="statusBarLabel">
+     <property name="text">
+      <string>Ready. Hold L2/R2 to drive. Press L1/R1 to E-STOP. Press START to clear latch.</string>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #888; font-size: 10pt; padding: 4px;</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

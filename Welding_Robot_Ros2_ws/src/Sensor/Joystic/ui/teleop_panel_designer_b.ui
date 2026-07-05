@@ -1,0 +1,564 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TeleopPanel</class>
+ <widget class="QMainWindow" name="TeleopPanel">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1180</width>
+    <height>820</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>FITO AMR — Joystick Teleop Configurator (Designer B)</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="rootLayout">
+    <!-- ============================================================
+         TOP BAR — controller selector, connection, hz, e-stop, dead-man
+         ============================================================ -->
+    <item>
+     <widget class="QFrame" name="topBar">
+      <property name="frameShape"><enum>QFrame::StyledPanel</enum></property>
+      <property name="frameShadow"><enum>QFrame::Raised</enum></property>
+      <layout class="QHBoxLayout" name="topBarLayout">
+       <item>
+        <widget class="QLabel" name="lblControllerCaption">
+         <property name="text"><string>Controller:</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="cmbController">
+         <property name="minimumSize"><size><width>260</width><height>0</height></size></property>
+         <item><property name="text"><string>Nintendo Switch Pro Controller (Bluetooth)</string></property></item>
+         <item><property name="text"><string>Microntek USB Joystick (PSX clone, wired)</string></property></item>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="lblDevicePath">
+         <property name="text"><string>/dev/input/joystick_pro</string></property>
+         <property name="styleSheet"><string>color:#888; font-style:italic;</string></property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="topSpacer1">
+         <property name="orientation"><enum>Qt::Horizontal</enum></property>
+         <property name="sizeHint" stdset="0"><size><width>20</width><height>20</height></size></property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QLabel" name="lblConnDot">
+         <property name="text"><string>●</string></property>
+         <property name="styleSheet"><string>color:#cc0000; font-size:18pt;</string></property>
+         <property name="toolTip"><string>Joystick connection indicator</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="lblConnText">
+         <property name="text"><string>Disconnected</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="lblHzCaption">
+         <property name="text"><string>/joy:</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="lblHz">
+         <property name="text"><string>0.0 Hz</string></property>
+         <property name="minimumSize"><size><width>80</width><height>0</height></size></property>
+         <property name="styleSheet"><string>font-family:monospace; font-weight:bold;</string></property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="topSpacer2">
+         <property name="orientation"><enum>Qt::Horizontal</enum></property>
+         <property name="sizeHint" stdset="0"><size><width>20</width><height>20</height></size></property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QLabel" name="lblDeadmanLed">
+         <property name="text"><string>DEAD-MAN</string></property>
+         <property name="alignment"><set>Qt::AlignCenter</set></property>
+         <property name="minimumSize"><size><width>110</width><height>30</height></size></property>
+         <property name="styleSheet"><string>background:#333; color:#888; border:1px solid #222; border-radius:4px; font-weight:bold;</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="lblEstopLed">
+         <property name="text"><string>E-STOP LATCHED</string></property>
+         <property name="alignment"><set>Qt::AlignCenter</set></property>
+         <property name="minimumSize"><size><width>150</width><height>30</height></size></property>
+         <property name="styleSheet"><string>background:#330000; color:#770000; border:1px solid #220000; border-radius:4px; font-weight:bold;</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnSoftEstop">
+         <property name="text"><string>SOFT E-STOP</string></property>
+         <property name="minimumSize"><size><width>140</width><height>40</height></size></property>
+         <property name="styleSheet"><string>background:#cc0000; color:white; font-weight:bold; border-radius:4px;</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnClearEstop">
+         <property name="text"><string>Clear E-Stop</string></property>
+         <property name="minimumSize"><size><width>110</width><height>40</height></size></property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+
+    <!-- ============================================================
+         MAIN TABS — Drive / Mapping / Diagnostics / Config
+         ============================================================ -->
+    <item>
+     <widget class="QTabWidget" name="tabsMain">
+      <property name="currentIndex"><number>0</number></property>
+
+      <!-- ============================================================
+           TAB 1: DRIVE — live joystick state + cmd_vel readout
+           ============================================================ -->
+      <widget class="QWidget" name="tabDrive">
+       <attribute name="title"><string>Drive</string></attribute>
+       <layout class="QHBoxLayout" name="tabDriveLayout">
+
+        <!-- LEFT: button grid -->
+        <item>
+         <widget class="QGroupBox" name="grpButtons">
+          <property name="title"><string>Buttons (live)</string></property>
+          <layout class="QGridLayout" name="grpButtonsLayout">
+           <item row="0" column="0"><widget class="QLabel" name="btn0"><property name="text"><string>0
+B / ✕</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="minimumSize"><size><width>80</width><height>56</height></size></property><property name="styleSheet"><string>background:#222; color:#888; border:1px solid #444; border-radius:4px;</string></property></widget></item>
+           <item row="0" column="1"><widget class="QLabel" name="btn1"><property name="text"><string>1
+A / ◯</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="minimumSize"><size><width>80</width><height>56</height></size></property><property name="styleSheet"><string>background:#222; color:#888; border:1px solid #444; border-radius:4px;</string></property></widget></item>
+           <item row="0" column="2"><widget class="QLabel" name="btn2"><property name="text"><string>2
+Y / □</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="minimumSize"><size><width>80</width><height>56</height></size></property><property name="styleSheet"><string>background:#222; color:#888; border:1px solid #444; border-radius:4px;</string></property></widget></item>
+           <item row="0" column="3"><widget class="QLabel" name="btn3"><property name="text"><string>3
+X / △</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="minimumSize"><size><width>80</width><height>56</height></size></property><property name="styleSheet"><string>background:#222; color:#888; border:1px solid #444; border-radius:4px;</string></property></widget></item>
+           <item row="1" column="0"><widget class="QLabel" name="btn4"><property name="text"><string>4
+L1</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="minimumSize"><size><width>80</width><height>56</height></size></property><property name="styleSheet"><string>background:#222; color:#888; border:1px solid #444; border-radius:4px;</string></property></widget></item>
+           <item row="1" column="1"><widget class="QLabel" name="btn5"><property name="text"><string>5
+R1</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="minimumSize"><size><width>80</width><height>56</height></size></property><property name="styleSheet"><string>background:#222; color:#888; border:1px solid #444; border-radius:4px;</string></property></widget></item>
+           <item row="1" column="2"><widget class="QLabel" name="btn6"><property name="text"><string>6
+L2</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="minimumSize"><size><width>80</width><height>56</height></size></property><property name="styleSheet"><string>background:#222; color:#888; border:1px solid #444; border-radius:4px;</string></property></widget></item>
+           <item row="1" column="3"><widget class="QLabel" name="btn7"><property name="text"><string>7
+R2</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="minimumSize"><size><width>80</width><height>56</height></size></property><property name="styleSheet"><string>background:#222; color:#888; border:1px solid #444; border-radius:4px;</string></property></widget></item>
+           <item row="2" column="0"><widget class="QLabel" name="btn8"><property name="text"><string>8
+Select</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="minimumSize"><size><width>80</width><height>56</height></size></property><property name="styleSheet"><string>background:#222; color:#888; border:1px solid #444; border-radius:4px;</string></property></widget></item>
+           <item row="2" column="1"><widget class="QLabel" name="btn9"><property name="text"><string>9
+Start</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="minimumSize"><size><width>80</width><height>56</height></size></property><property name="styleSheet"><string>background:#222; color:#888; border:1px solid #444; border-radius:4px;</string></property></widget></item>
+           <item row="2" column="2"><widget class="QLabel" name="btn10"><property name="text"><string>10
+LStick</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="minimumSize"><size><width>80</width><height>56</height></size></property><property name="styleSheet"><string>background:#222; color:#888; border:1px solid #444; border-radius:4px;</string></property></widget></item>
+           <item row="2" column="3"><widget class="QLabel" name="btn11"><property name="text"><string>11
+RStick</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="minimumSize"><size><width>80</width><height>56</height></size></property><property name="styleSheet"><string>background:#222; color:#888; border:1px solid #444; border-radius:4px;</string></property></widget></item>
+           <item row="3" column="0"><widget class="QLabel" name="btn12"><property name="text"><string>12
+Home</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="minimumSize"><size><width>80</width><height>56</height></size></property><property name="styleSheet"><string>background:#222; color:#888; border:1px solid #444; border-radius:4px;</string></property></widget></item>
+           <item row="3" column="1"><widget class="QLabel" name="btn13"><property name="text"><string>13
+Capture</string></property><property name="alignment"><set>Qt::AlignCenter</set></property><property name="minimumSize"><size><width>80</width><height>56</height></size></property><property name="styleSheet"><string>background:#222; color:#888; border:1px solid #444; border-radius:4px;</string></property></widget></item>
+           <item row="3" column="2" colspan="2"><widget class="QLabel" name="lblButtonsHint"><property name="text"><string>(boxes light up green when pressed; gray = released; red = mapped to E-Stop)</string></property><property name="styleSheet"><string>color:#777; font-size:9pt; font-style:italic;</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+          </layout>
+         </widget>
+        </item>
+
+        <!-- MIDDLE: axes + sticks -->
+        <item>
+         <widget class="QGroupBox" name="grpAxes">
+          <property name="title"><string>Axes (live)</string></property>
+          <layout class="QGridLayout" name="grpAxesLayout">
+           <item row="0" column="0"><widget class="QLabel" name="lblAx0Cap"><property name="text"><string>Axis 0 — LStick X</string></property></widget></item>
+           <item row="0" column="1"><widget class="QProgressBar" name="barAx0"><property name="minimum"><number>-100</number></property><property name="maximum"><number>100</number></property><property name="value"><number>0</number></property><property name="format"><string>%v%</string></property></widget></item>
+           <item row="0" column="2"><widget class="QLabel" name="lblAx0Val"><property name="text"><string>+0.000</string></property><property name="minimumSize"><size><width>70</width><height>0</height></size></property><property name="styleSheet"><string>font-family:monospace;</string></property></widget></item>
+
+           <item row="1" column="0"><widget class="QLabel" name="lblAx1Cap"><property name="text"><string>Axis 1 — LStick Y  ⟵ LINEAR</string></property><property name="styleSheet"><string>color:#3aa3ff; font-weight:bold;</string></property></widget></item>
+           <item row="1" column="1"><widget class="QProgressBar" name="barAx1"><property name="minimum"><number>-100</number></property><property name="maximum"><number>100</number></property><property name="value"><number>0</number></property><property name="format"><string>%v%</string></property></widget></item>
+           <item row="1" column="2"><widget class="QLabel" name="lblAx1Val"><property name="text"><string>+0.000</string></property><property name="styleSheet"><string>font-family:monospace; color:#3aa3ff; font-weight:bold;</string></property></widget></item>
+
+           <item row="2" column="0"><widget class="QLabel" name="lblAx2Cap"><property name="text"><string>Axis 2 — RStick X  ⟵ ANGULAR</string></property><property name="styleSheet"><string>color:#ffae3a; font-weight:bold;</string></property></widget></item>
+           <item row="2" column="1"><widget class="QProgressBar" name="barAx2"><property name="minimum"><number>-100</number></property><property name="maximum"><number>100</number></property><property name="value"><number>0</number></property><property name="format"><string>%v%</string></property></widget></item>
+           <item row="2" column="2"><widget class="QLabel" name="lblAx2Val"><property name="text"><string>+0.000</string></property><property name="styleSheet"><string>font-family:monospace; color:#ffae3a; font-weight:bold;</string></property></widget></item>
+
+           <item row="3" column="0"><widget class="QLabel" name="lblAx3Cap"><property name="text"><string>Axis 3 — RStick Y</string></property></widget></item>
+           <item row="3" column="1"><widget class="QProgressBar" name="barAx3"><property name="minimum"><number>-100</number></property><property name="maximum"><number>100</number></property><property name="value"><number>0</number></property><property name="format"><string>%v%</string></property></widget></item>
+           <item row="3" column="2"><widget class="QLabel" name="lblAx3Val"><property name="text"><string>+0.000</string></property><property name="styleSheet"><string>font-family:monospace;</string></property></widget></item>
+
+           <item row="4" column="0"><widget class="QLabel" name="lblAx4Cap"><property name="text"><string>Axis 4 — D-Pad X</string></property></widget></item>
+           <item row="4" column="1"><widget class="QProgressBar" name="barAx4"><property name="minimum"><number>-100</number></property><property name="maximum"><number>100</number></property><property name="value"><number>0</number></property><property name="format"><string>%v%</string></property></widget></item>
+           <item row="4" column="2"><widget class="QLabel" name="lblAx4Val"><property name="text"><string>+0.000</string></property><property name="styleSheet"><string>font-family:monospace;</string></property></widget></item>
+
+           <item row="5" column="0"><widget class="QLabel" name="lblAx5Cap"><property name="text"><string>Axis 5 — D-Pad Y</string></property></widget></item>
+           <item row="5" column="1"><widget class="QProgressBar" name="barAx5"><property name="minimum"><number>-100</number></property><property name="maximum"><number>100</number></property><property name="value"><number>0</number></property><property name="format"><string>%v%</string></property></widget></item>
+           <item row="5" column="2"><widget class="QLabel" name="lblAx5Val"><property name="text"><string>+0.000</string></property><property name="styleSheet"><string>font-family:monospace;</string></property></widget></item>
+
+           <item row="6" column="0" colspan="3">
+            <widget class="Line" name="line_axes_sep"><property name="orientation"><enum>Qt::Horizontal</enum></property></widget>
+           </item>
+
+           <item row="7" column="0" colspan="3">
+            <layout class="QHBoxLayout" name="sticksLayout">
+             <item>
+              <widget class="QLabel" name="lblLStickViz">
+               <property name="text"><string>L</string></property>
+               <property name="alignment"><set>Qt::AlignCenter</set></property>
+               <property name="minimumSize"><size><width>140</width><height>140</height></size></property>
+               <property name="styleSheet"><string>background:#1a1a1a; border:2px solid #3aa3ff; border-radius:70px; color:#3aa3ff; font-weight:bold;</string></property>
+               <property name="toolTip"><string>Left stick visualizer (dot to be drawn at runtime)</string></property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="lblRStickViz">
+               <property name="text"><string>R</string></property>
+               <property name="alignment"><set>Qt::AlignCenter</set></property>
+               <property name="minimumSize"><size><width>140</width><height>140</height></size></property>
+               <property name="styleSheet"><string>background:#1a1a1a; border:2px solid #ffae3a; border-radius:70px; color:#ffae3a; font-weight:bold;</string></property>
+               <property name="toolTip"><string>Right stick visualizer (dot to be drawn at runtime)</string></property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+
+        <!-- RIGHT: cmd_vel + speed scaling -->
+        <item>
+         <widget class="QGroupBox" name="grpCmdVel">
+          <property name="title"><string>/cmd_vel output</string></property>
+          <layout class="QVBoxLayout" name="grpCmdVelLayout">
+           <item>
+            <widget class="QLabel" name="lblLinearCap">
+             <property name="text"><string>linear.x  (m/s)</string></property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLCDNumber" name="lcdLinear">
+             <property name="digitCount"><number>6</number></property>
+             <property name="smallDecimalPoint"><bool>true</bool></property>
+             <property name="minimumSize"><size><width>0</width><height>60</height></size></property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QProgressBar" name="barLinear">
+             <property name="minimum"><number>-100</number></property>
+             <property name="maximum"><number>100</number></property>
+             <property name="value"><number>0</number></property>
+             <property name="format"><string>%v%% of v_max</string></property>
+            </widget>
+           </item>
+
+           <item>
+            <widget class="Line" name="line_cmd_sep"><property name="orientation"><enum>Qt::Horizontal</enum></property></widget>
+           </item>
+
+           <item>
+            <widget class="QLabel" name="lblAngularCap">
+             <property name="text"><string>angular.z  (rad/s)</string></property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLCDNumber" name="lcdAngular">
+             <property name="digitCount"><number>6</number></property>
+             <property name="smallDecimalPoint"><bool>true</bool></property>
+             <property name="minimumSize"><size><width>0</width><height>60</height></size></property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QProgressBar" name="barAngular">
+             <property name="minimum"><number>-100</number></property>
+             <property name="maximum"><number>100</number></property>
+             <property name="value"><number>0</number></property>
+             <property name="format"><string>%v%% of w_max</string></property>
+            </widget>
+           </item>
+
+           <item>
+            <widget class="Line" name="line_cmd_sep2"><property name="orientation"><enum>Qt::Horizontal</enum></property></widget>
+           </item>
+
+           <item>
+            <widget class="QLabel" name="lblLinScaleCap"><property name="text"><string>Linear scale (×v_max)</string></property></widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="linScaleLayout">
+             <item><widget class="QSlider" name="sldLinearScale"><property name="orientation"><enum>Qt::Horizontal</enum></property><property name="minimum"><number>10</number></property><property name="maximum"><number>100</number></property><property name="value"><number>50</number></property></widget></item>
+             <item><widget class="QLabel" name="lblLinScaleVal"><property name="text"><string>50%</string></property><property name="minimumSize"><size><width>40</width><height>0</height></size></property></widget></item>
+            </layout>
+           </item>
+
+           <item>
+            <widget class="QLabel" name="lblAngScaleCap"><property name="text"><string>Angular scale (×w_max)</string></property></widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="angScaleLayout">
+             <item><widget class="QSlider" name="sldAngularScale"><property name="orientation"><enum>Qt::Horizontal</enum></property><property name="minimum"><number>10</number></property><property name="maximum"><number>100</number></property><property name="value"><number>50</number></property></widget></item>
+             <item><widget class="QLabel" name="lblAngScaleVal"><property name="text"><string>50%</string></property><property name="minimumSize"><size><width>40</width><height>0</height></size></property></widget></item>
+            </layout>
+           </item>
+
+           <item>
+            <spacer name="cmdSpacer">
+             <property name="orientation"><enum>Qt::Vertical</enum></property>
+             <property name="sizeHint" stdset="0"><size><width>20</width><height>40</height></size></property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+
+      <!-- ============================================================
+           TAB 2: MAPPING — what each button/axis does, from YAML
+           ============================================================ -->
+      <widget class="QWidget" name="tabMapping">
+       <attribute name="title"><string>Mapping</string></attribute>
+       <layout class="QVBoxLayout" name="tabMappingLayout">
+        <item>
+         <widget class="QLabel" name="lblMappingHelp">
+          <property name="text"><string>Logical action → physical input.  Reads from config/pro_controller_teleop.yaml or microntek_teleop.yaml.  Status column lights up live.</string></property>
+          <property name="wordWrap"><bool>true</bool></property>
+          <property name="styleSheet"><string>color:#aaa; font-style:italic;</string></property>
+         </widget>
+        </item>
+
+        <item>
+         <widget class="QTableWidget" name="tblMapping">
+          <property name="alternatingRowColors"><bool>true</bool></property>
+          <property name="selectionMode"><enum>QAbstractItemView::SingleSelection</enum></property>
+          <property name="selectionBehavior"><enum>QAbstractItemView::SelectRows</enum></property>
+          <property name="columnCount"><number>5</number></property>
+          <property name="rowCount"><number>0</number></property>
+          <attribute name="horizontalHeaderStretchLastSection"><bool>true</bool></attribute>
+          <column><property name="text"><string>Logical Action</string></property></column>
+          <column><property name="text"><string>Type</string></property></column>
+          <column><property name="text"><string>Index</string></property></column>
+          <column><property name="text"><string>Physical Label</string></property></column>
+          <column><property name="text"><string>Live Value / State</string></property></column>
+         </widget>
+        </item>
+
+        <item>
+         <layout class="QHBoxLayout" name="mappingActionsLayout">
+          <item>
+           <widget class="QPushButton" name="btnReloadMapping">
+            <property name="text"><string>Reload from YAML</string></property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnDetectInput">
+            <property name="text"><string>Detect input… (press anything)</string></property>
+            <property name="toolTip"><string>Highlights whichever button/axis you press next — useful for figuring out an unknown mapping.</string></property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="mappingSpacer">
+            <property name="orientation"><enum>Qt::Horizontal</enum></property>
+            <property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QLabel" name="lblYamlPath">
+            <property name="text"><string>YAML: (none loaded)</string></property>
+            <property name="styleSheet"><string>color:#888; font-family:monospace;</string></property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+
+      <!-- ============================================================
+           TAB 3: DIAGNOSTICS — hz, timeouts, errors, log
+           ============================================================ -->
+      <widget class="QWidget" name="tabDiag">
+       <attribute name="title"><string>Diagnostics</string></attribute>
+       <layout class="QGridLayout" name="tabDiagLayout">
+
+        <item row="0" column="0">
+         <widget class="QGroupBox" name="grpStats">
+          <property name="title"><string>Stream stats</string></property>
+          <layout class="QFormLayout" name="grpStatsLayout">
+           <item row="0" column="0"><widget class="QLabel" name="lblStatHzCap"><property name="text"><string>/joy publish rate</string></property></widget></item>
+           <item row="0" column="1"><widget class="QLabel" name="lblStatHz"><property name="text"><string>0.00 Hz</string></property><property name="styleSheet"><string>font-family:monospace;</string></property></widget></item>
+           <item row="1" column="0"><widget class="QLabel" name="lblStatLatencyCap"><property name="text"><string>last msg age</string></property></widget></item>
+           <item row="1" column="1"><widget class="QLabel" name="lblStatLatency"><property name="text"><string>— ms</string></property><property name="styleSheet"><string>font-family:monospace;</string></property></widget></item>
+           <item row="2" column="0"><widget class="QLabel" name="lblStatTimeoutCap"><property name="text"><string>joy timeout count</string></property></widget></item>
+           <item row="2" column="1"><widget class="QLabel" name="lblStatTimeout"><property name="text"><string>0</string></property><property name="styleSheet"><string>font-family:monospace;</string></property></widget></item>
+           <item row="3" column="0"><widget class="QLabel" name="lblStatCmdHzCap"><property name="text"><string>/cmd_vel publish rate</string></property></widget></item>
+           <item row="3" column="1"><widget class="QLabel" name="lblStatCmdHz"><property name="text"><string>0.00 Hz</string></property><property name="styleSheet"><string>font-family:monospace;</string></property></widget></item>
+           <item row="4" column="0"><widget class="QLabel" name="lblStatMsgsCap"><property name="text"><string>messages received</string></property></widget></item>
+           <item row="4" column="1"><widget class="QLabel" name="lblStatMsgs"><property name="text"><string>0</string></property><property name="styleSheet"><string>font-family:monospace;</string></property></widget></item>
+           <item row="5" column="0"><widget class="QLabel" name="lblStatErrCap"><property name="text"><string>last error</string></property></widget></item>
+           <item row="5" column="1"><widget class="QLabel" name="lblStatErr"><property name="text"><string>(none)</string></property><property name="styleSheet"><string>color:#cc6666; font-family:monospace;</string></property></widget></item>
+          </layout>
+         </widget>
+        </item>
+
+        <item row="0" column="1">
+         <widget class="QGroupBox" name="grpVelHistory">
+          <property name="title"><string>Velocity history (text rolling buffer)</string></property>
+          <layout class="QVBoxLayout" name="grpVelHistoryLayout">
+           <item>
+            <widget class="QPlainTextEdit" name="txtVelHistory">
+             <property name="readOnly"><bool>true</bool></property>
+             <property name="styleSheet"><string>font-family:monospace; font-size:9pt; background:#101010; color:#ddd;</string></property>
+             <property name="placeholderText"><string>t=...   v=+0.000 m/s   w=+0.000 rad/s   est=0  dm=0</string></property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+
+        <item row="1" column="0" colspan="2">
+         <widget class="QGroupBox" name="grpEventLog">
+          <property name="title"><string>Event log</string></property>
+          <layout class="QVBoxLayout" name="grpEventLogLayout">
+           <item>
+            <widget class="QPlainTextEdit" name="txtEventLog">
+             <property name="readOnly"><bool>true</bool></property>
+             <property name="styleSheet"><string>font-family:monospace; font-size:9pt; background:#0a0a0a; color:#cfcfcf;</string></property>
+             <property name="placeholderText"><string>[hh:mm:ss] events such as: connect, disconnect, e-stop latched, e-stop cleared, dead-man on/off, mapping reload</string></property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="logBtnLayout">
+             <item><widget class="QPushButton" name="btnClearLog"><property name="text"><string>Clear log</string></property></widget></item>
+             <item><widget class="QPushButton" name="btnExportLog"><property name="text"><string>Export to file…</string></property></widget></item>
+             <item><spacer name="logSpacer"><property name="orientation"><enum>Qt::Horizontal</enum></property><property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property></spacer></item>
+             <item><widget class="QCheckBox" name="chkAutoscroll"><property name="text"><string>Autoscroll</string></property><property name="checked"><bool>true</bool></property></widget></item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+
+      <!-- ============================================================
+           TAB 4: CONFIG — show + edit YAML knobs (read-only first)
+           ============================================================ -->
+      <widget class="QWidget" name="tabConfig">
+       <attribute name="title"><string>Config</string></attribute>
+       <layout class="QGridLayout" name="tabConfigLayout">
+
+        <item row="0" column="0">
+         <widget class="QGroupBox" name="grpSpeedLimits">
+          <property name="title"><string>Speed limits</string></property>
+          <layout class="QFormLayout" name="grpSpeedLimitsLayout">
+           <item row="0" column="0"><widget class="QLabel" name="lblVMaxCap"><property name="text"><string>linear v_max (m/s)</string></property></widget></item>
+           <item row="0" column="1"><widget class="QDoubleSpinBox" name="spnVMax"><property name="minimum"><double>0.0</double></property><property name="maximum"><double>5.0</double></property><property name="singleStep"><double>0.05</double></property><property name="value"><double>0.5</double></property></widget></item>
+           <item row="1" column="0"><widget class="QLabel" name="lblWMaxCap"><property name="text"><string>angular w_max (rad/s)</string></property></widget></item>
+           <item row="1" column="1"><widget class="QDoubleSpinBox" name="spnWMax"><property name="minimum"><double>0.0</double></property><property name="maximum"><double>6.28</double></property><property name="singleStep"><double>0.05</double></property><property name="value"><double>1.0</double></property></widget></item>
+           <item row="2" column="0"><widget class="QLabel" name="lblDeadzoneCap"><property name="text"><string>stick deadzone</string></property></widget></item>
+           <item row="2" column="1"><widget class="QDoubleSpinBox" name="spnDeadzone"><property name="minimum"><double>0.0</double></property><property name="maximum"><double>0.5</double></property><property name="singleStep"><double>0.01</double></property><property name="value"><double>0.05</double></property></widget></item>
+           <item row="3" column="0"><widget class="QLabel" name="lblPubRateCap"><property name="text"><string>publish rate (Hz)</string></property></widget></item>
+           <item row="3" column="1"><widget class="QSpinBox" name="spnPubRate"><property name="minimum"><number>1</number></property><property name="maximum"><number>200</number></property><property name="value"><number>50</number></property></widget></item>
+           <item row="4" column="0"><widget class="QLabel" name="lblTimeoutCap"><property name="text"><string>joy timeout (ms)</string></property></widget></item>
+           <item row="4" column="1"><widget class="QSpinBox" name="spnTimeout"><property name="minimum"><number>50</number></property><property name="maximum"><number>5000</number></property><property name="value"><number>500</number></property></widget></item>
+          </layout>
+         </widget>
+        </item>
+
+        <item row="0" column="1">
+         <widget class="QGroupBox" name="grpInvert">
+          <property name="title"><string>Inversion / orientation</string></property>
+          <layout class="QVBoxLayout" name="grpInvertLayout">
+           <item><widget class="QCheckBox" name="chkInvLinear"><property name="text"><string>Invert linear axis</string></property></widget></item>
+           <item><widget class="QCheckBox" name="chkInvAngular"><property name="text"><string>Invert angular axis</string></property></widget></item>
+           <item><widget class="QCheckBox" name="chkSwapSticks"><property name="text"><string>Swap left/right sticks (linear ↔ angular)</string></property></widget></item>
+           <item><widget class="QCheckBox" name="chkRequireDeadman"><property name="text"><string>Require dead-man (recommended)</string></property><property name="checked"><bool>true</bool></property></widget></item>
+           <item><widget class="QCheckBox" name="chkPublishZero"><property name="text"><string>Publish zero velocity on idle / e-stop</string></property><property name="checked"><bool>true</bool></property></widget></item>
+           <item><spacer name="invSpacer"><property name="orientation"><enum>Qt::Vertical</enum></property><property name="sizeHint" stdset="0"><size><width>20</width><height>20</height></size></property></spacer></item>
+          </layout>
+         </widget>
+        </item>
+
+        <item row="1" column="0" colspan="2">
+         <widget class="QGroupBox" name="grpYamlPreview">
+          <property name="title"><string>YAML preview (read-only — edit the file on disk and Reload)</string></property>
+          <layout class="QVBoxLayout" name="grpYamlPreviewLayout">
+           <item>
+            <widget class="QPlainTextEdit" name="txtYamlPreview">
+             <property name="readOnly"><bool>true</bool></property>
+             <property name="styleSheet"><string>font-family:monospace; font-size:9pt; background:#101010; color:#ddd;</string></property>
+             <property name="placeholderText"><string># config/pro_controller_teleop.yaml will be rendered here on load</string></property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="cfgBtnLayout">
+             <item><widget class="QPushButton" name="btnLoadYaml"><property name="text"><string>Load YAML…</string></property></widget></item>
+             <item><widget class="QPushButton" name="btnReloadYaml"><property name="text"><string>Reload</string></property></widget></item>
+             <item><widget class="QPushButton" name="btnApplyRuntime"><property name="text"><string>Apply runtime overrides (params)</string></property><property name="toolTip"><string>Pushes spin/checkbox values to the live teleop node via ROS2 parameters — does not write the YAML file.</string></property></widget></item>
+             <item><spacer name="cfgSpacer"><property name="orientation"><enum>Qt::Horizontal</enum></property><property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property></spacer></item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+
+    <!-- ============================================================
+         BOTTOM STATUS BAR (in-layout, not QStatusBar — easier to style)
+         ============================================================ -->
+    <item>
+     <widget class="QFrame" name="bottomBar">
+      <property name="frameShape"><enum>QFrame::StyledPanel</enum></property>
+      <layout class="QHBoxLayout" name="bottomBarLayout">
+       <item>
+        <widget class="QLabel" name="lblNodeStatusCap">
+         <property name="text"><string>teleop node:</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="lblNodeStatus">
+         <property name="text"><string>not detected</string></property>
+         <property name="styleSheet"><string>color:#cc6666; font-family:monospace;</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="lblTopicCap">
+         <property name="text"><string>  /joy:</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="lblTopicJoy">
+         <property name="text"><string>—</string></property>
+         <property name="styleSheet"><string>font-family:monospace;</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="lblTopicCmdCap">
+         <property name="text"><string>  /cmd_vel:</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="lblTopicCmd">
+         <property name="text"><string>—</string></property>
+         <property name="styleSheet"><string>font-family:monospace;</string></property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="bottomSpacer">
+         <property name="orientation"><enum>Qt::Horizontal</enum></property>
+         <property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QLabel" name="lblBuildTag">
+         <property name="text"><string>Designer B layout · v0.1</string></property>
+         <property name="styleSheet"><string>color:#777; font-style:italic;</string></property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -1,0 +1,28 @@
+# Wired game controller -> stable symlinks /dev/joystick_wired and /dev/input/joystick_wired
+#
+# joy_linux (parameter dev:=/dev/input/joystick_wired) and the joystick_gui
+# health check both expect /dev/input/joystick_wired. The kernel joydev name
+# (/dev/input/jsN) is enumeration-order dependent, so a stable udev symlink is
+# required.
+#
+# Detected on this machine (udevadm info -a -n /dev/input/js0):
+#   ATTRS{idVendor}  == "045e"   (Microsoft)
+#   ATTRS{idProduct} == "0b12"   (Xbox Series S|X Controller, wired / xpad)
+#   ATTRS{name}      == "Microsoft Xbox Series S|X Controller"
+#
+# NOTE on the symlink target: SYMLINK+= is relative to /dev/, so to create
+# /dev/input/joystick_wired you MUST write "input/joystick_wired" (not just
+# "joystick_wired", which only makes /dev/joystick_wired). joy_linux and the
+# GUI health check look under /dev/input/, so both entries are listed here.
+# (Origin lesson: FITO_AMR_ros2_ws MANUAL_DRIVE.md, 2026-06-01 / 2026-06-11.)
+#
+# The original FITO platform used a DragonRise/Microntek PSX-clone (0079:0006);
+# this machine's wired controller is the Xbox unit above, so the rule matches
+# 045e:0b12 instead. If a different joystick is used, update idVendor/idProduct
+# (re-run install_udev.sh with the device connected).
+#
+# Apply after editing:
+#   sudo udevadm control --reload-rules && sudo udevadm trigger
+# Verify:
+#   ls -la /dev/input/joystick_wired
+SUBSYSTEM=="input", ATTRS{idVendor}=="045e", ATTRS{idProduct}=="0b12", KERNEL=="js[0-9]*", SYMLINK+="joystick_wired input/joystick_wired", MODE="0666", GROUP="input"
