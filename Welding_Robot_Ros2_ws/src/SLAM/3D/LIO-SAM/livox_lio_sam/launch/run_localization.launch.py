@@ -1,0 +1,125 @@
+import os
+from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration, Command
+from launch_ros.actions import Node
+
+
+def generate_launch_description():
+    """
+    Localization Mode Launch File
+    - Loads a pre-built map from PCD files
+    - Performs localization only (no map updates)
+    - Disables loop closure
+
+    Usage:
+        ros2 launch livox_lio_sam run_localization.launch.py
+        ros2 launch livox_lio_sam run_localization.launch.py use_sim_time:=true  # for bag playback
+
+    Prerequisites:
+        - A pre-built map must exist at the path specified in params_localization.yaml
+        - Default path: /home/amap/Downloads/LOAM/GlobalMap.pcd
+    """
+
+    share_dir = get_package_share_directory('livox_lio_sam')
+    # src 폴더 경로 (rviz config 수정/저장 편의를 위해)
+    src_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    parameter_file = LaunchConfiguration('params_file')
+    xacro_path = os.path.join(share_dir, 'config', 'robot.urdf.xacro')
+    # RViz config - src 폴더에서 직접 로드 (수정/저장 편의)
+    rviz_config_file = os.path.join(src_dir, 'config', 'rviz2.rviz')
+
+    params_declare = DeclareLaunchArgument(
+        'params_file',
+        default_value=os.path.join(
+            share_dir, 'config', 'params_localization.yaml'),
+        description='Path to the ROS2 parameters file for Localization mode.')
+
+    use_sim_time_declare = DeclareLaunchArgument(
+        'use_sim_time',
+        default_value='false',
+        description='Use simulation time (for bag playback)')
+
+    global_map_path_declare = DeclareLaunchArgument(
+        'global_map_path',
+        default_value=os.path.expanduser('~/parking_robot_ros2_ws/map/lio_sam/GlobalMap.pcd'),
+        description='Path to the pre-built global map PCD file')
+
+    print("======================================")
+    print("  LIO-SAM Localization Mode")
+    print("  Loading pre-built map...")
+    print("======================================")
+
+    return LaunchDescription([
+        params_declare,
+        use_sim_time_declare,
+        global_map_path_declare,
+        Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            arguments='0.0 0.0 0.0 0.0 0.0 0.0 map odom'.split(' '),
+            parameters=[parameter_file,
+                       {'use_sim_time': LaunchConfiguration('use_sim_time')}],
+            output='screen'
+            ),
+        Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            name='base_link_to_livox',
+            arguments='0.05 0 0.42 0 0 0 base_link livox_frame'.split(' '),
+            parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}],
+            output='screen'
+            ),
+        Node(
+            package='robot_state_publisher',
+            executable='robot_state_publisher',
+            name='robot_state_publisher',
+            output='screen',
+            parameters=[{
+                'robot_description': Command(['xacro', ' ', xacro_path]),
+                'use_sim_time': LaunchConfiguration('use_sim_time')
+            }]
+        ),
+        Node(
+            package='livox_lio_sam',
+            executable='livox_lio_sam_imuPreintegration',
+            name='livox_lio_sam_imuPreintegration',
+            parameters=[parameter_file,
+                       {'use_sim_time': LaunchConfiguration('use_sim_time')}],
+            output='screen'
+        ),
+        Node(
+            package='livox_lio_sam',
+            executable='livox_lio_sam_imageProjection',
+            name='livox_lio_sam_imageProjection',
+            parameters=[parameter_file,
+                       {'use_sim_time': LaunchConfiguration('use_sim_time')}],
+            output='screen'
+        ),
+        Node(
+            package='livox_lio_sam',
+            executable='livox_lio_sam_featureExtraction',
+            name='livox_lio_sam_featureExtraction',
+            parameters=[parameter_file,
+                       {'use_sim_time': LaunchConfiguration('use_sim_time')}],
+            output='screen'
+        ),
+        Node(
+            package='livox_lio_sam',
+            executable='livox_lio_sam_mapOptimization',
+            name='livox_lio_sam_mapOptimization',
+            parameters=[parameter_file,
+                       {'use_sim_time': LaunchConfiguration('use_sim_time'),
+                        'globalMapPath': LaunchConfiguration('global_map_path')}],
+            output='screen'
+        ),
+        Node(
+            package='rviz2',
+            executable='rviz2',
+            name='rviz2',
+            arguments=['-d', rviz_config_file],
+            parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}],
+            output='screen'
+        )
+    ])
