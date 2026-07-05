@@ -1,3 +1,148 @@
+## 2026-07-05 12:07 (KST) — 해당 세션만 커밋·푸쉬하라는 지시
+
+> "해당 세션만 커밋 푸쉬해야지"
+
+---
+
+## 2026-07-05 12:06 (KST) — 세션 종료 준비 요청
+
+> "세션 종료 준비해주세요"
+
+---
+
+## 2026-07-05 12:05 (KST) — 해당 세션 작업만 커밋·푸쉬·머지하고 기록 종료
+
+> "해당 세션 작업만  커밋 푸쉬 머지 하고 기록 종료"
+
+---
+
+## 2026-07-05 12:05 (KST) — 커밋·푸쉬·머지 완료 후 user_instructions.md 별도 커밋·푸쉬·머지 후 종료
+
+> "커밋 푸쉬 머지까지 완료 후 user_instructions.md 별도 커밋 푸쉬 머지 하고 종료"
+
+---
+
+## 2026-07-05 12:02
+다시 빌드해서 완료
+
+## 2026-07-05 12:01
+[터미널 출력 공유] mkswap /swapfile 완료, 스왑 15Gi 0B 사용 (swap 확대 성공 확인)
+
+## 2026-07-05 12:01 (KST) — ACS GUI 구동 시 pyqtgraph ModuleNotFoundError (에러 로그 붙여넣기)
+
+> "amap@amap-KAIST:~/Project/JJH/FITO$ cd /home/amap/Project/kkw/Welding_Robot_Ros2_ws && source /opt/ros/humble/setup.bash && source install/setup.bash && export ROS_DOMAIN_ID=150 && ros2 launch acs acs_gui.launch.py
+> [...] [acs_gui_node-2] ModuleNotFoundError: No module named 'pyqtgraph'
+> [ERROR] [acs_gui_node-2]: process has died [pid 65543, exit code 1 ...]"
+
+---
+
+## 2026-07-05 12:02 (KST) — joystick_gui 를 ROS2 연결 없는 순수 모터 테스트용으로 전환 방향
+
+> "joystick_gui  는  ros2와 연결없이 순수 모터 테스트용으로 가야 할 것 같음"
+
+---
+
+## 2026-07-05 11:58 (KST) — ACS/acs/docs 실행 한줄 명령어 생성 요청 (기존 규칙 검사 후)
+
+> "/home/amap/Project/kkw/Welding_Robot_Ros2_ws/src/ACS/acs/docs 에  실행 한줄 명령어 만들어주세요. 기존 규칙 검사후 생성 부탁"
+
+---
+
+## 2026-07-05 11:57 (KST) — claude-usage-monitor 설치 요청
+
+> "https://github.com/kuks2309/claude-usage-monitor.git 설치 부탁"
+
+---
+
+## 2026-07-05 11:54
+swap 확대
+
+## 2026-07-05 12:04 (KST) — merge 후 브랜치 삭제가 기본 아니냐는 지적 (삭제 승인)
+
+> "머지후에 기본적으로 삭제 하는것이 아닌지?"
+
+---
+
+## 2026-07-05 12:03 (KST) — IMU 세션 종료 가능 여부 확인
+
+> "완료 세션종료 해도 되나요?"
+
+---
+
+## 2026-07-05 12:02 (KST) — 구동(빌드) 완료 확인 문의
+
+> "구 동완료 확인?"
+
+---
+
+## 2026-07-05 12:01 (KST) — servo UI 는 UI 분리 원칙으로 Qt5 작성
+
+> "ui 분리 윈칙에 의해서 작성바람 qt5"
+
+---
+
+## 2026-07-05 11:51
+진행상태보고 해주세요
+
+## 2026-07-05 12:00 (KST) — joystick_gui 가 조이스틱 기능 테스트용인지 확인
+
+> "/home/amap/Project/kkw/Welding_Robot_Ros2_ws/src/Sensor/Joystic/joystick_gui 는 조이스틱 기능 테스트 위한 것이죠?"
+
+---
+
+## 2026-07-05 12:00 (KST) — Sensor 한줄 실행 명령어 파일명 run_command.md 로 통일
+
+> "/home/amap/Project/kkw/Welding_Robot_Ros2_ws/src/Sensor 에서 한줄 실행 명령어 파일 이름은 run_command.md 로 통일 부탁"
+
+---
+
+## 2026-07-05 11:43 (KST) — 해당 세션 산출물 깃 커밋·푸쉬 요청 (sensor-migration 세션)
+
+> "해당 세션 산출물 깃 커밋 푸쉬"
+
+---
+
+## 2026-07-05 11:46 (KST) — 세션 종료 가능 여부 재확인
+
+> "이제 이번 세션 종료해도 될까요?"
+
+---
+
+## 2026-07-05 11:46 (KST) — merge 승인 및 merge 대행 지시
+
+> "머지 승인 머지해주세요"
+
+---
+
+## 2026-07-05 11:45 (KST) — 이번 세션 기록하고 산출물 커밋 푸쉬
+
+> "이번 세션 기록하고 산출물은 커밋 푸쉬"
+
+---
+
+## 2026-07-05 11:41 (KST) — install_udev.sh 실행 결과 붙여넣기 (조이스틱 룰)
+
+> "amap@amap-KAIST:~/Project/JJH/FITO$ /home/amap/Project/kkw/Welding_Robot_Ros2_ws/src/Sensor/Joystic/udev/install_udev.sh
+> Detected joystick on /dev/input/js0: 045e:0b12 (Microsoft Xbox Series S|X Controller)
+> Installing rule -> /etc/udev/rules.d/99-joystick-wired.rules
+>   SUBSYSTEM==\"input\", ATTRS{idVendor}==\"045e\", ATTRS{idProduct}==\"0b12\", KERNEL==\"js[0-9]*\", SYMLINK+=\"joystick_wired input/joystick_wired\", MODE=\"0666\", GROUP=\"input\"
+> Done. Verify with:  ls -la /dev/input/joystick_wired
+> amap@amap-KAIST:~/Project/JJH/FITO$"
+
+---
+
+## 2026-07-05 11:41 (KST) — UI는 새로 만들 것 (servo_gui_main.cpp 참조)
+
+> "ui 는 새롭게 만들것 /home/amap/Project/JJH/FITO/welding_slam_ws/src/servo_rviz_panel/src/servo_gui_main.cpp 참조해서"
+
+---
+
+## 2026-07-05 11:40 (KST) — 이식 완료 여부 확인 + 구동 시도 의사
+
+> "이식 완료했나요? 구동해 보려고 합니다."
+
+---
+
 ## 2026-07-05 11:34 (KST) — FITO_AMR_ros2_ws는 참조자료, 실제 구현은 FITO 폴더의 나머지
 
 > "/home/amap/Project/JJH/FITO/FITO_AMR_ros2_ws 는 참조 자료임  이 workspace 를 제외하고 실제 구현한 것은 home/amap/Project/JJH/FITO 폴더에 있음"
