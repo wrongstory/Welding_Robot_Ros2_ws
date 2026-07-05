@@ -1,3 +1,27 @@
+## 2026-07-05 11:04 (KST) — 세션 생성물 기록 커밋·푸쉬 요청
+
+> "이 세션에서 만든 생성물 기록 커밋 푸쉬"
+
+---
+
+## 2026-07-05 11:02 (KST) — 세션별 커밋·푸쉬·머지 원칙 위반 여부 확인 요청
+
+> "원칙 위반인것 같은데  세션별로 커밋하고 푸쉬하고 머지 하는것이 원칙이 아닌지  git workflow 확인 바람"
+
+---
+
+## 2026-07-05 11:01 (KST) — main 직접 push 승인 (옵션 1)
+
+> "1"
+
+---
+
+## 2026-07-05 11:00 (KST) — IMU 구동 확인 요청
+
+> "imu  구동 확인 부탁"
+
+---
+
 ## 2026-07-05 10:56 (KST) — solo 모드 확인 가능 지적
 
 > "solo 모드인지 확인 가능할것인데"
@@ -104,4 +128,102 @@
 
 ## 2026-07-05 10:17
 설치 완료 확인 바람
+
+---
+
+# ── 이식됨: sensor-migration 세션에서 이전에 다른 프로젝트(FITO/Welding_Robot_Ros2_ws/docs)에 잘못 기록된 지시들 (원 대화 순서 최신→과거, 정확한 시각 불명) ──
+
+## 2026-07-05 — 기존 잘못된 기록도 이 프로젝트로 이식 요청
+
+> "기존 잘못된 기록도 이 프로젝트로 이식"
+
+---
+
+## 2026-07-05 — 지시 기록은 해당(kkw) 프로젝트에 해야 함
+
+> "해당 프로젝트에 기록하는 것인데"
+
+---
+
+## 2026-07-05 — 진행
+
+> "진행"
+
+---
+
+## 2026-07-05 — 한줄 실행 명령: 프로젝트 이동 → source → launch 구성
+
+> "해당 프로젝트로 이동 source 명령 , launch 실행 으로 만드셔"
+
+---
+
+## 2026-07-05 — README 실행 명령이 한줄이어야 하는데 너무 많음 (지시 위배 지적)
+
+> "/home/amap/Project/kkw/Welding_Robot_Ros2_ws/src/Sensor/LIdar/3D/livox_mid360/doc/README.md 실행 명령이 한줄실행명령인데 왜이린 많은지 ? 지시사항 위배임"
+
+---
+
+## 2026-07-05 — 도메인 ID 150 사용 (2000은 범위 초과로 불가)
+
+> "150"
+
+---
+
+## 2026-07-05 — ROS_DOMAIN_ID 2000 설정 요청
+
+> "도메인 ID는 2000으로 해주세요"
+
+---
+
+## 2026-07-05 — livox_mid360 에 doc 폴더 + rviz 포함 3D LiDAR 구동 1줄 명령 작성 요청
+
+> "3d livox lidar  구동 1줄 명령을 /home/amap/Project/kkw/Welding_Robot_Ros2_ws/src/Sensor/LIdar/3D/livox_mid360 에 doc 폴더를 만들고 rviz 와 함께 구동할 수 있도록 해주세요"
+
+---
+
+## 2026-07-05 — lidar_3d_roi_pkg 를 Sensor/LIdar/3D 로 이동 확인
+
+> "/home/amap/Project/kkw/Welding_Robot_Ros2_ws/src/Sensor/lidar_3d_roi_pkg 는 /home/amap/Project/kkw/Welding_Robot_Ros2_ws/src/Sensor/LIdar/3D으로 이동되어야 하겠죠?"
+
+---
+
+## 2026-07-05 — Livox 시리얼 끝자리 833
+
+> "833 으로 livox시리얼 끝남"
+
+---
+
+## 2026-07-05 — 원본 폴더의 구동 흔적을 조사하면 됨 (안 했다는 지적)
+
+> "이미 원본 폴더에 구동한 흔적을 조사하면 되는데 하지 도 않고"
+
+---
+
+## 2026-07-05 — 추정하지 말고 테스트
+
+> "추정하지 말고 테스트 해보세요"
+
+---
+
+## 2026-07-05 — VSCode 에디터/파일 내용에 한국어 금지
+
+> "no korean on vscode editor"
+
+---
+
+## 2026-07-05 — 원본 폴더 삭제 불필요, 여기서 새 버전 작업
+
+> "no need to remove original folder  , make new version heere"
+
+---
+
+## 2026-07-05 — sensor 이전 후 colcon build 및 test
+
+> "after conlcon build and test"
+
+---
+
+## 2026-07-05 — Welding_Robot_Ros2_ws 구현 시작, sensor 폴더 먼저 이전
+
+> "/home/amap/Project/JJH/FITO/Welding_Robot_Ros2_ws 를 이 폴더에서 구현하로 합니다. 먼저 sensor폴더의 내용을 이전해주세요"
 
