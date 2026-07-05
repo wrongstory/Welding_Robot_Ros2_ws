@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>amr_motion_control_2wd</name>
+  <version>0.1.0</version>
+  <description>2WD differential drive motion control with action servers (Spin, Turn, Translate, YawControl)</description>
+  <maintainer email="tc@tamr.com">tc</maintainer>
+  <license>BSD-3-Clause</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>amr_safety_core</depend>
+  <depend>rclcpp</depend>
+  <depend>rclcpp_action</depend>
+  <depend>amr_interfaces</depend>
+  <depend>tc_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2_geometry_msgs</depend>
+
+  <!-- motion_control.launch.py 가 cmd_vel_safety_guard 노드를 함께 기동 (런타임 의존) -->
+  <exec_depend>cmd_vel_safety_guard</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

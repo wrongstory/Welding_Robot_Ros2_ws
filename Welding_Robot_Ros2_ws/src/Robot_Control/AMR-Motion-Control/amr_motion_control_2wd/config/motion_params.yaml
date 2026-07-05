@@ -1,0 +1,108 @@
+amr_motion_control_2wd:
+  ros__parameters:
+    # 로봇 기하
+    wheel_separation: 0.48
+    wheel_radius: 0.075
+
+    # 제어 파라미터
+    control_rate_hz: 50.0
+
+    # Translate 도착 판정
+    translate_arrival_tolerance: 0.03        # m (목표 도달 허용 오차)
+    translate_reverse_arrival_tolerance: 0.03 # m (후진 목표 도달 허용 오차)
+
+    # Translate 초기 정렬 검증 임계값 (heading error 이 이상이면 PARAM_ERR 로 거부)
+    #   기본 45° → 85°로 상향: pre-SPIN 없이 큰 heading 변화 WP 전환 허용
+    #   (Translate 제어기가 주행 중 heading 보정 가능)
+    translate_heading_threshold_deg: 85.0
+
+    # 도착 2단 감속 캡 (T-AMR rosbag 측정 기반, 완전정지 jerk 저감) — translate / translate_reverse 공통 형식
+    #   1단(원거리): v_cap = approach_gain · remaining  (거리비례, 순항속도 따라 감속거리 자동 스케일)
+    #   2단(근거리, v<stop_speed): v_cap = sqrt(2·stop_decel·remaining)  (완만 정속감속, 도착점 0 수렴)
+    #   전환 잔여거리 = stop_speed^2/(2·stop_decel). 최종 ramp-to-0 도 stop_decel 로 완만.
+    #   approach_gain[1/s]: 1단 기울기 / stop_speed[m/s]: 1↔2단 전환 / stop_decel[m/s²]: 2단·정지 감속도
+    translate_approach_gain: 1.5
+    translate_stop_speed: 0.2
+    translate_stop_decel: 0.4
+    # mpc_light 감속(jerk-제한 S-curve v_cap + 출력 rate-limit, 2026-06-26 Issue 8/decel)
+    #   jerk_max[m/s³]: 출력 가속도 변화율 상한(승차감/모터전류 surge 제한)
+    #   a_decel_max[m/s²]: 감속 한계(v_cap 역산 + rate-limit a_min 공용)
+    #   should_stop_speed[m/s]: 도착 확정 속도 게이트(openpilot vEgoStopping 의 AMR 스케일)
+    translate_jerk_max: 1.0
+    translate_a_decel_max: 0.4
+    translate_should_stop_speed: 0.1
+    translate_reverse_approach_gain: 1.5
+    translate_reverse_stop_speed: 0.2
+    translate_reverse_stop_decel: 0.4
+    translate_reverse_jerk_max: 1.0
+    translate_reverse_a_decel_max: 0.4
+    translate_reverse_should_stop_speed: 0.1
+
+    # Behind-start 접근 정책 (로봇이 세그먼트 시작점 뒤(projection<0)에서 출발할 때)
+    #   false(기본): translate_behind_start_speed(0.2 m/s) 고정으로 시작점까지 접근 후 가속
+    #   true       : 시작점 뒤에서부터 바로 가속(접근 거리만큼 사다리꼴 프로파일 전치, 경계 연속)
+    #   SPIN 직후 로봇이 다음 TRANSLATE 시작점보다 뒤에 놓여 0.2 m/s 가 길게 지속되는 것을 없애려면 true.
+    translate_behind_start_speed: 0.2
+    translate_behind_start_accelerate: true   # behind creep 미사용 — 시작점 뒤에서 바로 가속 (2026-06-26 사용자 요청)
+    # accelerate 모드 출발 kick(m/s): 위치 기반 가속의 정지마찰 deadlock(0.02 m/s 갇힘) 방지용.
+    # 0.1 에서 시작해 매 주기 acceleration·dt 로 상승. (Issue 8 fix 2026-06-26)
+    translate_behind_start_kick: 0.1
+    translate_reverse_behind_start_speed: 0.2
+    translate_reverse_behind_start_accelerate: true   # 후진도 동일 (2026-06-26 사용자 요청)
+    translate_reverse_behind_start_kick: 0.1
+
+    # Translate/Reverse heading(PD) + CTE(Stanley) 게인 (HIL 튜닝 2026-06-18)
+    #   K_stanley: CTE(횡오차) 당김. 2.0→0.8 로 낮춰 off-axis line 획득 overshoot 감소
+    #     (틀어진 시작 (7,-1) 목표오차 0.32m→3.6cm) + 0.5~1.0 m/s fwd/rev 안정(omega 떨림/포화 0).
+    #   K_soft: 고속 CTE 민감도 완화(분모 K_soft+vx, 1.0→2.0). max_omega: 각속도 상한(1.0→0.5).
+    #   Kp_heading/Kd_heading 은 코드 기본값(1.0/0.3) 유지.
+    translate_K_stanley: 0.8
+    translate_K_soft: 2.0
+    translate_max_omega: 0.5
+    translate_reverse_K_stanley: 0.8
+    translate_reverse_K_soft: 2.0
+    translate_reverse_max_omega: 0.5
+
+    # Spin 정밀도
+    imu_deadband_deg: 0.05
+    # min_speed_dps: Phase 1-3 사다리꼴(진행량 기반) 명령의 하한 floor.
+    #   사다리꼴 speed=sqrt(2·a·progress) 라 시작(progress=0) 시 ≈0 → 이 floor 로 clamp 되어
+    #   첫 명령이 결정됨. floor 가 정지마찰 돌파속도보다 낮으면 로봇이 안 움직여 progress 가
+    #   0 에 갇히고 omega 가 floor 에 영원히 고정 → 무한정체/timeout (chicken-and-egg).
+    #   TR_Nav/SIL 기본 2.0 dps 는 FITO 허브모터(ZLAC706 직결, 정지마찰 큼)에선 돌파 불가였음
+    #   (HIL 2026-06-05: 직접 cmd_vel 45dps=15RPM 회전 확인, 2dps 는 정체). 돌파 보장 위해 상향.
+    #   ※ floor 가 높으면 decel 구간도 floor 유지 → target 도달 시 잔여속도로 overshoot(PID fine 이 보정).
+    min_speed_dps: 45.0
+    # fine_correction_threshold (deadband): 목표 이 오차 내면 fine 종료 → 미세보정 안 함.
+    # stick-slip break-free lurch 방지: band 가 목표 ~0.5~0.8° 안착시키므로 deadband 1.0° 면 fine 스킵→무진동.
+    fine_correction_threshold_deg: 1.0
+    fine_correction_speed_dps: 3.0
+    fine_correction_timeout_sec: 3.0
+    settling_delay_ms: 200
+
+    # Fine PID 게인 (Phase 3.5: omega_dps = Kp·e + Ki·∫e + Kd·ė).
+    # 2026-06-05 HIL 튜닝: Kp=2.0 Kd sweep(0.0/0.1/0.2) 무영향 확인 → 잔류 ~1.3°(정지마찰), overshoot ~3°(coarse).
+    #   적분 reset[deadband/부호반전] 선행 적용 → windup kick 방지.
+    #   Ki=0.5/Kp1.7 HIL → 60°/90° ±0.25°(무진동), 30° −1.1°(fine 창 2s 짧아 Ki 한계).
+    #   HIL 게인 sweep: Kp 1.7~3.0 / Ki 0~0.6 / Kd 0~0.5 모두 노이즈 바닥(max|e|~0.5°, ±0.3°)에서 동등·무진동.
+    #   Kp/Kd 미세 실험 (Ki=0.5 고정, 노이즈 바닥 부근). 남은 overshoot ~3° 는 게인 무관(coarse).
+    # 순수 PID spin (사다리꼴 제거, 2026-06-08). Kp 가 회전 전체를 지배:
+    #   e>max_w/Kp 구간은 omega 포화(=max_w 로 cruise), e<max_w/Kp 부터 비례 감속. → Kp 높을수록 cruise 길고 감속 늦음.
+    kp_spin: 3.5
+    ki_spin: 0.0
+    kd_spin: 0.4
+    integral_limit_deg: 30.0
+
+    # coarse 조기종료 band [deg] — overshoot 대책. coarse 를 (target-band)에서 종료 → 관성 coast 가
+    # 목표 앞에서 일어나 정점이 목표 근처(overshoot≈0). 0=기존. band≈측정 coast(~3°)에서 상쇄 최대.
+    coarse_exit_band_deg: 3.0
+
+    # Localization watchdog jump thresholds
+    translate_position_jump_threshold: 1.0
+    translate_reverse_position_jump_threshold: 1.0
+    yaw_control_position_jump_threshold: 1.0
+
+    # Localization watchdog timeout (rtabmap localization_pose is ~1Hz, so 5s gives headroom)
+    translate_localization_timeout_sec: 5.0
+    translate_reverse_localization_timeout_sec: 5.0
+    yaw_control_localization_timeout_sec: 5.0
