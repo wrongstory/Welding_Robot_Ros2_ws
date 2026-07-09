@@ -43,6 +43,9 @@ struct Detection
   float score = 0.f;
   int cls = 0;
   cv::Mat mask;  // 640×640 CV_8U (0/1)
+  // 중심선(ADR 0010): 유효 시 line_p1~line_p2 가 640 좌표계 직선 끝점
+  bool has_line = false;
+  cv::Point2f line_p1{0.f, 0.f}, line_p2{0.f, 0.f};
 };
 
 // 출력 텐서 맵(vstream 이름 → RawTensor)을 후처리해 검출 리스트 반환.

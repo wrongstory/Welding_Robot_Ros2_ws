@@ -20,6 +20,7 @@ find_package(pybind11 REQUIRED)         # ament: pybind11_vendor
 add_library(seam_tracking_core
   cpp/src/hailo_seg_engine.cpp
   cpp/src/yolov8_seg_postprocess.cpp
+  cpp/src/seam_centerline.cpp
 )
 target_include_directories(seam_tracking_core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/cpp/include>

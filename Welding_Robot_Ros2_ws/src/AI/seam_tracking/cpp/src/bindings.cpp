@@ -8,10 +8,31 @@
 #include <pybind11/stl.h>
 
 #include "seam_tracking/hailo_seg_engine.hpp"
+#include "seam_tracking/seam_centerline.hpp"
 
 namespace py = pybind11;
 using seam_tracking::Detection;
 using seam_tracking::HailoSegEngine;
+
+namespace
+{
+// 디바이스 없이 중심선 알고리즘을 단위 검증하기 위한 노출 헬퍼.
+// mask: (H,W) uint8 → line (x1,y1,x2,y2) 또는 None.
+py::object fit_centerline_np(
+  py::array_t<uint8_t, py::array::c_style | py::array::forcecast> arr)
+{
+  if (arr.ndim() != 2) {
+    throw std::runtime_error("mask 는 (H,W) uint8 여야 함");
+  }
+  cv::Mat mask(static_cast<int>(arr.shape(0)), static_cast<int>(arr.shape(1)),
+    CV_8U, const_cast<uint8_t *>(arr.data()));
+  const seam_tracking::SeamLine sl = seam_tracking::fit_seam_centerline(mask);
+  if (!sl.valid) {
+    return py::none();
+  }
+  return py::make_tuple(sl.p1.x, sl.p1.y, sl.p2.x, sl.p2.y);
+}
+}  // namespace
 
 namespace
 {
@@ -43,6 +64,12 @@ py::list infer_np(
     item["score"] = d.score;
     item["cls"] = d.cls;
     item["mask"] = std::move(mask);
+    // 중심선(ADR 0010): 640 좌표계 (x1,y1,x2,y2) 또는 None
+    if (d.has_line) {
+      item["line"] = py::make_tuple(d.line_p1.x, d.line_p1.y, d.line_p2.x, d.line_p2.y);
+    } else {
+      item["line"] = py::none();
+    }
     out.append(std::move(item));
   }
   return out;
@@ -65,4 +92,8 @@ PYBIND11_MODULE(seam_tracking_cpp, m)
       "중앙 640x640 crop RGB uint8 → [{box,score,cls,mask}]")
     .def_property_readonly(
       "input_size", &HailoSegEngine::input_size, "입력 한 변 크기(640)");
+
+  m.def(
+    "fit_centerline", &fit_centerline_np, py::arg("mask"),
+    "마스크(HxW uint8) → 중심선 직선 끝점 (x1,y1,x2,y2) 또는 None (ADR 0010)");
 }

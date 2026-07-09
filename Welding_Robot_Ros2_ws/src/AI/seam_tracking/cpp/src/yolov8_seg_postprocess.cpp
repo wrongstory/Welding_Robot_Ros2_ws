@@ -6,6 +6,8 @@
 
 #include <opencv2/imgproc.hpp>
 
+#include "seam_tracking/seam_centerline.hpp"
+
 namespace seam_tracking
 {
 namespace
@@ -242,6 +244,11 @@ std::vector<Detection> postprocess(
     d.score = c.score;
     d.cls = c.cls;
     d.mask = build_mask(c, *proto, mask_thr);
+    // 중심선 추출 (ADR 0010) — 마스크에서 직선 방정식 피팅
+    const SeamLine sl = fit_seam_centerline(d.mask);
+    d.has_line = sl.valid;
+    d.line_p1 = sl.p1;
+    d.line_p2 = sl.p2;
     dets.push_back(std::move(d));
   }
   return dets;
