@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>seam_tracking</name>
+  <version>0.1.0</version>
+  <description>
+    용접선(seam) 추적용 실시간 인스턴스 세그멘테이션.
+    Hailo-8 에서 YOLOv8s-seg HEF 를 구동하는 C++ 코어(HailoSegEngine) +
+    pybind11 바인딩 + PyQt5 카메라 UI. ROS2 노드는 향후 동일 코어를 래핑(ADR 0009).
+  </description>
+  <maintainer email="drko0808@gmail.com">amap</maintainer>
+  <license>Proprietary</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- C++ 코어: HailoRT(system, find_package) + OpenCV + pybind11 -->
+  <build_depend>pybind11_vendor</build_depend>
+  <depend>libopencv-dev</depend>
+
+  <!-- UI: PyQt5 (런타임, rosdep 키 python3-pyqt5) -->
+  <exec_depend>python3-pyqt5</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
