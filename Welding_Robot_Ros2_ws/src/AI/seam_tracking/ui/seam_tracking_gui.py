@@ -22,10 +22,12 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)  # co-located seam_tracking_cpp(.so) + camera_worker
 
-from camera_worker import InferenceWorker  # noqa: E402
+from camera_worker import InferenceWorker, center_crop_640  # noqa: E402
 
-MASK_COLOR = (40, 40, 230)  # BGR (빨강)
+MASK_COLOR = (40, 40, 230)   # BGR (빨강) - 마스크
+LINE_COLOR = (60, 220, 60)   # BGR (초록) - 중심선
 MASK_ALPHA = 0.45
+IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff", ".webp")
 
 
 def find_resource(rel_candidates):
@@ -96,6 +98,12 @@ def render_overlay(crop_bgr, dets):
             cv2.rectangle(out, (x1, y1), (x2, y2), MASK_COLOR, 2)
             cv2.putText(out, f"Welding:{d['score']:.2f}", (x1, max(y1 - 5, 12)),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, MASK_COLOR, 1)
+        # 중심선(ADR 0010) — 초록 직선
+        for d in dets:
+            line = d.get("line")
+            if line is not None:
+                lx1, ly1, lx2, ly2 = (int(v) for v in line)
+                cv2.line(out, (lx1, ly1), (lx2, ly2), LINE_COLOR, 2)
     return out
 
 
@@ -120,10 +128,15 @@ class SeamTrackingWindow(QMainWindow):
         self._engine_conf = None  # 엔진 생성 시점 conf (변경 시 재생성)
         self._worker = None
         self._last_image_dir = default_image_dir()  # 파일 대화상자 위치 기억
+        self._image_list = []   # 선택 폴더의 이미지 경로 목록
+        self._image_idx = 0     # 현재 표시 인덱스
+        self._last_full_frame = None  # 카메라 원본 프레임(저장용)
+        self._save_dir = os.path.expanduser("~/seam_captures")
 
         self.startButton.clicked.connect(self.on_start)
         self.stopButton.clicked.connect(self.on_stop)
-        self.openButton.clicked.connect(self.on_open_image)
+        self.openButton.clicked.connect(self.on_open_folder)
+        self.saveButton.clicked.connect(self.on_save_frame)
         self.sourceCombo.currentIndexChanged.connect(self.on_source_changed)
         self.on_source_changed(self.sourceCombo.currentIndex())
 
@@ -163,23 +176,38 @@ class SeamTrackingWindow(QMainWindow):
         if self._worker is None:
             self.videoLabel.setText(
                 "카메라 대기 중…  Start 를 누르세요" if cam
-                else "이미지 파일 모드…  Open Image… 로 이미지를 여세요")
+                else "이미지 폴더 모드…  Open Folder… 로 폴더 선택 후 ←/→ 로 이동")
 
-    # ---- 이미지 파일 입력 ----
-    def on_open_image(self):
+    # ---- 이미지 폴더 입력 (←/→ 순회) ----
+    def on_open_folder(self):
         from PyQt5.QtWidgets import QFileDialog
-        path, _ = QFileDialog.getOpenFileName(
-            self, "이미지 선택", self._last_image_dir,
-            "이미지 (*.jpg *.jpeg *.png *.bmp *.tif *.tiff *.webp)")
-        if not path:
+        folder = QFileDialog.getExistingDirectory(
+            self, "이미지 폴더 선택", self._last_image_dir)
+        if not folder:
             return
-        self._last_image_dir = os.path.dirname(path)  # 다음 열기 위치 기억
-        img = cv2.imread(path)
-        if img is None:
-            QMessageBox.warning(self, "읽기 실패", f"이미지를 열 수 없음:\n{path}")
+        self._last_image_dir = folder
+        files = sorted(
+            os.path.join(folder, f) for f in os.listdir(folder)
+            if f.lower().endswith(IMAGE_EXTS))
+        if not files:
+            QMessageBox.warning(self, "이미지 없음", f"폴더에 이미지가 없음:\n{folder}")
+            return
+        self._image_list = files
+        self._image_idx = 0
+        self.setFocus()  # ←/→ 키 입력 수신
+        self._show_current_image()
+
+    def _show_current_image(self):
+        """현재 인덱스 이미지 추론·표시."""
+        if not self._image_list:
             return
         engine = self._ensure_engine()
         if engine is None:
+            return
+        path = self._image_list[self._image_idx]
+        img = cv2.imread(path)
+        if img is None:
+            self.statusLabel.setText(f"읽기 실패: {os.path.basename(path)}")
             return
         crop_bgr, _, _ = center_crop_640(img)
         rgb = np.ascontiguousarray(cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2RGB))
@@ -190,8 +218,32 @@ class SeamTrackingWindow(QMainWindow):
         except Exception as exc:  # noqa: BLE001
             QMessageBox.warning(self, "추론 실패", str(exc))
             return
-        self.on_result(crop_bgr, dets, 1.0 / max(time.time() - t0, 1e-6))
-        self.statusLabel.setText(f"{os.path.basename(path)} · 검출 {len(dets)}")
+        self.on_result(img, crop_bgr, dets, 1.0 / max(time.time() - t0, 1e-6))
+        n = len(self._image_list)
+        self.statusLabel.setText(
+            f"[{self._image_idx + 1}/{n}] {os.path.basename(path)} · 검출 {len(dets)}  (←/→ 이동)")
+
+    def _step_image(self, delta):
+        if not self._image_list:
+            return
+        self._image_idx = (self._image_idx + delta) % len(self._image_list)
+        self._show_current_image()
+
+    def keyPressEvent(self, event):
+        key = event.key()
+        # 카메라 라이브 중 S → 원본 저장
+        if self.is_camera_source() and self._worker is not None and key == Qt.Key_S:
+            self.on_save_frame()
+            return
+        # 이미지 폴더 모드에서 ←/→(및 A/D) 로 순회
+        if self._image_list and not self.is_camera_source():
+            if key in (Qt.Key_Right, Qt.Key_Down, Qt.Key_D, Qt.Key_Space):
+                self._step_image(1)
+                return
+            if key in (Qt.Key_Left, Qt.Key_Up, Qt.Key_A):
+                self._step_image(-1)
+                return
+        super().keyPressEvent(event)
 
     # ---- 카메라 제어 ----
     def on_start(self):
@@ -208,25 +260,45 @@ class SeamTrackingWindow(QMainWindow):
         self.stopButton.setEnabled(True)
         self.confSpin.setEnabled(False)
         self.openButton.setEnabled(False)
-        self.statusLabel.setText("실행 중…")
+        self.saveButton.setEnabled(True)  # 카메라 라이브 중 원본 저장 가능
+        self.statusLabel.setText("실행 중…  (S: 원본 저장)")
 
     def on_stop(self):
         """카메라 워커만 정지. 엔진은 캐시 유지(conf 변경 시 _ensure_engine 이 재생성)."""
         if self._worker is not None:
             self._worker.stop()
             self._worker = None
+        self._last_full_frame = None
         cam = self.is_camera_source()
         self.startButton.setEnabled(cam)
         self.stopButton.setEnabled(False)
         self.openButton.setEnabled(not cam)
+        self.saveButton.setEnabled(False)  # 라이브 정지 → 저장 불가
         self.confSpin.setEnabled(True)
 
     # ---- 콜백 ----
-    def on_result(self, crop_bgr, dets, fps):
+    def on_result(self, full_bgr, crop_bgr, dets, fps):
+        self._last_full_frame = full_bgr  # 저장용 원본(오버레이 없음)
         vis = render_overlay(crop_bgr, dets)
         self.videoLabel.setPixmap(bgr_to_qpixmap(vis).scaled(
             self.videoLabel.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
         self.statusLabel.setText(f"검출 {len(dets)} · {fps:.1f} FPS")
+
+    # ---- 원본 저장 (카메라 라이브 전용) ----
+    def on_save_frame(self):
+        if not self.is_camera_source() or self._worker is None:
+            return
+        if self._last_full_frame is None:
+            self.statusLabel.setText("저장할 프레임 없음")
+            return
+        from datetime import datetime
+        os.makedirs(self._save_dir, exist_ok=True)
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
+        path = os.path.join(self._save_dir, f"capture_{ts}.jpg")
+        if cv2.imwrite(path, self._last_full_frame):
+            self.statusLabel.setText(f"저장: {path}")
+        else:
+            QMessageBox.warning(self, "저장 실패", f"저장 실패:\n{path}")
 
     def on_error(self, msg):
         self.on_stop()

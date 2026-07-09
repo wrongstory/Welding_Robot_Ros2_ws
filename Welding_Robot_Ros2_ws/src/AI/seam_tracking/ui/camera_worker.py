@@ -30,7 +30,8 @@ def center_crop_640(frame_bgr):
 class InferenceWorker(QThread):
     """카메라 프레임마다 crop→추론→결과 방출."""
 
-    result_ready = pyqtSignal(np.ndarray, list, float)  # crop_bgr, dets, fps
+    # full_bgr(원본 프레임), crop_bgr(중앙 640), dets, fps
+    result_ready = pyqtSignal(np.ndarray, np.ndarray, list, float)
     error = pyqtSignal(str)
 
     def __init__(self, engine, device=0, parent=None):
@@ -62,7 +63,8 @@ class InferenceWorker(QThread):
                     self.error.emit(f"추론 실패: {exc}")
                     break
                 fps = 1.0 / max(time.time() - t0, 1e-6)
-                self.result_ready.emit(crop_bgr, dets, fps)
+                # 원본 프레임 복사본 전달(워커가 다음 read 로 덮어써도 저장 안전)
+                self.result_ready.emit(frame.copy(), crop_bgr, dets, fps)
         finally:
             cap.release()
 
