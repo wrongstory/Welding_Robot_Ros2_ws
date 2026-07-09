@@ -85,25 +85,38 @@ def default_hef_path():
     return find_resource(cands)
 
 
-def render_overlay(crop_bgr, dets):
-    """검출 마스크(반투명)+박스 오버레이."""
-    out = crop_bgr.copy()
-    if dets:
-        overlay = crop_bgr.copy()
+CROP_BOX_COLOR = (0, 220, 220)  # BGR (노랑) - Hailo 입력 640 crop 영역
+
+
+def render_overlay(full_bgr, dets, x0, y0):
+    """전체 프레임 표시 + 640 crop 영역/검출 결과를 (x0,y0) 오프셋으로 매핑 오버레이."""
+    out = full_bgr.copy()
+    h, w = out.shape[:2]
+    # Hailo 입력 crop 영역 표시(노랑 테두리)
+    cv2.rectangle(out, (x0, y0), (x0 + 640, y0 + 640), CROP_BOX_COLOR, 1)
+    if not dets:
+        return out
+    # 마스크: crop(640) 좌표를 전체 프레임 ROI 에 배치(경계 클램프)
+    rx0, ry0 = max(x0, 0), max(y0, 0)
+    rx1, ry1 = min(x0 + 640, w), min(y0 + 640, h)
+    if rx1 > rx0 and ry1 > ry0:
+        overlay = out.copy()
+        roi = overlay[ry0:ry1, rx0:rx1]
         for d in dets:
-            overlay[d["mask"] > 0] = MASK_COLOR
+            m = d["mask"][ry0 - y0:ry1 - y0, rx0 - x0:rx1 - x0]
+            roi[m > 0] = MASK_COLOR
         cv2.addWeighted(overlay, MASK_ALPHA, out, 1 - MASK_ALPHA, 0, out)
-        for d in dets:
-            x1, y1, x2, y2 = (int(v) for v in d["box"])
-            cv2.rectangle(out, (x1, y1), (x2, y2), MASK_COLOR, 2)
-            cv2.putText(out, f"Welding:{d['score']:.2f}", (x1, max(y1 - 5, 12)),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, MASK_COLOR, 1)
-        # 중심선(ADR 0010) — 초록 직선
-        for d in dets:
-            line = d.get("line")
-            if line is not None:
-                lx1, ly1, lx2, ly2 = (int(v) for v in line)
-                cv2.line(out, (lx1, ly1), (lx2, ly2), LINE_COLOR, 2)
+    for d in dets:
+        x1, y1, x2, y2 = (int(v) for v in d["box"])
+        cv2.rectangle(out, (x0 + x1, y0 + y1), (x0 + x2, y0 + y2), MASK_COLOR, 2)
+        cv2.putText(out, f"Welding:{d['score']:.2f}", (x0 + x1, max(y0 + y1 - 5, 12)),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, MASK_COLOR, 1)
+    # 중심선(ADR 0010) — 초록 직선
+    for d in dets:
+        line = d.get("line")
+        if line is not None:
+            lx1, ly1, lx2, ly2 = (int(v) for v in line)
+            cv2.line(out, (x0 + lx1, y0 + ly1), (x0 + lx2, y0 + ly2), LINE_COLOR, 2)
     return out
 
 
@@ -209,7 +222,7 @@ class SeamTrackingWindow(QMainWindow):
         if img is None:
             self.statusLabel.setText(f"읽기 실패: {os.path.basename(path)}")
             return
-        crop_bgr, _, _ = center_crop_640(img)
+        crop_bgr, x0, y0, base = center_crop_640(img)
         rgb = np.ascontiguousarray(cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2RGB))
         import time
         t0 = time.time()
@@ -218,7 +231,7 @@ class SeamTrackingWindow(QMainWindow):
         except Exception as exc:  # noqa: BLE001
             QMessageBox.warning(self, "추론 실패", str(exc))
             return
-        self.on_result(img, crop_bgr, dets, 1.0 / max(time.time() - t0, 1e-6))
+        self.on_result(base, dets, 1.0 / max(time.time() - t0, 1e-6), x0, y0)
         n = len(self._image_list)
         self.statusLabel.setText(
             f"[{self._image_idx + 1}/{n}] {os.path.basename(path)} · 검출 {len(dets)}  (←/→ 이동)")
@@ -277,9 +290,9 @@ class SeamTrackingWindow(QMainWindow):
         self.confSpin.setEnabled(True)
 
     # ---- 콜백 ----
-    def on_result(self, full_bgr, crop_bgr, dets, fps):
-        self._last_full_frame = full_bgr  # 저장용 원본(오버레이 없음)
-        vis = render_overlay(crop_bgr, dets)
+    def on_result(self, full_bgr, dets, fps, x0, y0):
+        self._last_full_frame = full_bgr  # 저장용 전체 프레임(오버레이 없음)
+        vis = render_overlay(full_bgr, dets, x0, y0)
         self.videoLabel.setPixmap(bgr_to_qpixmap(vis).scaled(
             self.videoLabel.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
         self.statusLabel.setText(f"검출 {len(dets)} · {fps:.1f} FPS")
